@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Employé</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="form-page">
+<div class="container">
+    <h1 th:text="${employee.id != null ? '✏️ Modifier un employé' : '➕ Ajouter un employé'}"></h1>
+
+
+
+
+    <form th:action="@{/employees/save}" th:object="${employee}" method="post" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div th:if="${#fields.hasErrors('global')}" class="alert alert-error">
+            <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="matricule">Matricule <span class="required">*</span></label>
+                <input type="text" id="matricule" th:field="*{matricule}"
+                       th:classappend="${#fields.hasErrors('matricule')} ? 'error'" required>
+                <span class="error-message" th:if="${#fields.hasErrors('matricule')}"
+                      th:errors="*{matricule}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="poste">Poste</label>
+                <input type="text" id="poste" th:field="*{poste}"
+                       th:classappend="${#fields.hasErrors('poste')} ? 'error'">
+                <span class="error-message" th:if="${#fields.hasErrors('poste')}"
+                      th:errors="*{poste}"></span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nom">Nom <span class="required">*</span></label>
+                <input type="text" id="nom" th:field="*{nom}"
+                       th:classappend="${#fields.hasErrors('nom')} ? 'error'" required>
+                <span class="error-message" th:if="${#fields.hasErrors('nom')}"
+                      th:errors="*{nom}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="prenom">Prénom <span class="required">*</span></label>
+                <input type="text" id="prenom" th:field="*{prenom}"
+                       th:classappend="${#fields.hasErrors('prenom')} ? 'error'" required>
+                <span class="error-message" th:if="${#fields.hasErrors('prenom')}"
+                      th:errors="*{prenom}"></span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" th:field="*{email}"
+                       th:classappend="${#fields.hasErrors('email')} ? 'error'" required>
+                <span class="error-message" th:if="${#fields.hasErrors('email')}"
+                      th:errors="*{email}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="telephone">Téléphone</label>
+                <input type="tel" id="telephone" th:field="*{telephone}"
+                       th:classappend="${#fields.hasErrors('telephone')} ? 'error'"
+                       placeholder="0612345678">
+                <span class="error-message" th:if="${#fields.hasErrors('telephone')}"
+                      th:errors="*{telephone}"></span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="grade">Grade</label>
+                <input type="text" id="grade" th:field="*{grade}"
+                       th:classappend="${#fields.hasErrors('grade')} ? 'error'">
+                <span class="error-message" th:if="${#fields.hasErrors('grade')}"
+                      th:errors="*{grade}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="salaireBase">Salaire de base</label>
+                <input type="number" id="salaireBase" th:field="*{salaireBase}"
+                       th:classappend="${#fields.hasErrors('salaireBase')} ? 'error'"
+                       step="0.01" min="0">
+                <span class="error-message" th:if="${#fields.hasErrors('salaireBase')}"
+                      th:errors="*{salaireBase}"></span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="dateEmbauche">Date d'embauche <span class="required">*</span></label>
+                <input type="date" id="dateEmbauche" th:field="*{dateEmbauche}"
+                       th:classappend="${#fields.hasErrors('dateEmbauche')} ? 'error'">
+                <span class="error-message" th:if="${#fields.hasErrors('dateEmbauche')}"
+                      th:errors="*{dateEmbauche}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="idDepartement">ID Département</label>
+                <input type="number" id="idDepartement" th:field="*{idDepartement}"
+                       th:classappend="${#fields.hasErrors('idDepartement')} ? 'error'"
+                       min="1">
+                <span class="error-message" th:if="${#fields.hasErrors('idDepartement')}"
+                      th:errors="*{idDepartement}"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Rôle</label>
+            <input type="text" id="role" th:field="*{role}"
+                   th:classappend="${#fields.hasErrors('role')} ? 'error'">
+            <span class="error-message" th:if="${#fields.hasErrors('role')}"
+                  th:errors="*{role}"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" th:field="*{password}"
+                   th:classappend="${#fields.hasErrors('password')} ? 'error'"
+                   placeholder="Laissez vide pour ne pas modifier">
+            <span class="error-message" th:if="${#fields.hasErrors('password')}"
+                  th:errors="*{password}"></span>
+        </div>
+
+        <div class="btn-container">
+            <a th:href="@{/employees}" class="btn btn-secondary">❌ Annuler</a>
+            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

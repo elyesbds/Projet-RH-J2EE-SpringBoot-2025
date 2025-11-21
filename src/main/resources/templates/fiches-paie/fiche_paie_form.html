@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Fiche de Paie</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <div class="form-container">
+        <h1 th:text="${fichePaie.id != null ? '✏️ Modifier une fiche de paie' : '➕ Ajouter une fiche de paie'}"></h1>
+
+        <form th:action="@{/fiches-paie/save}" th:object="${fichePaie}" method="post" novalidate>
+            <input type="hidden" th:field="*{id}">
+
+            <div th:if="${#fields.hasErrors('global')}" class="alert alert-error">
+                <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="idEmployer">Employé <span class="required">*</span></label>
+                <select id="idEmployer" th:field="*{idEmployer}"
+                        th:classappend="${#fields.hasErrors('idEmployer')} ? 'error'" required>
+                    <option value="">-- Sélectionner un employé --</option>
+                    <option th:each="emp : ${employees}"
+                            th:value="${emp.id}"
+                            th:text="${emp.prenom + ' ' + emp.nom + ' - ' + emp.matricule}">
+                    </option>
+                </select>
+                <span class="error-message" th:if="${#fields.hasErrors('idEmployer')}"
+                      th:errors="*{idEmployer}"></span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mois">Mois <span class="required">*</span></label>
+                    <select id="mois" th:field="*{mois}"
+                            th:classappend="${#fields.hasErrors('mois')} ? 'error'" required>
+                        <option value="">-- Sélectionner un mois --</option>
+                        <option value="1">Janvier</option>
+                        <option value="2">Février</option>
+                        <option value="3">Mars</option>
+                        <option value="4">Avril</option>
+                        <option value="5">Mai</option>
+                        <option value="6">Juin</option>
+                        <option value="7">Juillet</option>
+                        <option value="8">Août</option>
+                        <option value="9">Septembre</option>
+                        <option value="10">Octobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Décembre</option>
+                    </select>
+                    <span class="error-message" th:if="${#fields.hasErrors('mois')}"
+                          th:errors="*{mois}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="annee">Année <span class="required">*</span></label>
+                    <input type="number" id="annee" th:field="*{annee}"
+                           th:classappend="${#fields.hasErrors('annee')} ? 'error'"
+                           min="2020" max="2030" required>
+                    <span class="error-message" th:if="${#fields.hasErrors('annee')}"
+                          th:errors="*{annee}"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="salaireBase">Salaire de base <span class="required">*</span></label>
+                    <input type="number" id="salaireBase" th:field="*{salaireBase}"
+                           th:classappend="${#fields.hasErrors('salaireBase')} ? 'error'"
+                           step="0.01" min="0" required placeholder="Ex: 2500.00">
+                    <span class="error-message" th:if="${#fields.hasErrors('salaireBase')}"
+                          th:errors="*{salaireBase}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="primes">Primes</label>
+                    <input type="number" id="primes" th:field="*{primes}"
+                           th:classappend="${#fields.hasErrors('primes')} ? 'error'"
+                           step="0.01" min="0" placeholder="Ex: 150.00">
+                    <span class="error-message" th:if="${#fields.hasErrors('primes')}"
+                          th:errors="*{primes}"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="deductions">Déductions</label>
+                    <input type="number" id="deductions" th:field="*{deductions}"
+                           th:classappend="${#fields.hasErrors('deductions')} ? 'error'"
+                           step="0.01" min="0" placeholder="Ex: 50.00">
+                    <span class="error-message" th:if="${#fields.hasErrors('deductions')}"
+                          th:errors="*{deductions}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateGeneration">Date de génération <span class="required">*</span></label>
+                    <input type="date" id="dateGeneration" th:field="*{dateGeneration}"
+                           th:classappend="${#fields.hasErrors('dateGeneration')} ? 'error'" required>
+                    <span class="error-message" th:if="${#fields.hasErrors('dateGeneration')}"
+                          th:errors="*{dateGeneration}"></span>
+                </div>
+            </div>
+
+            <div class="alert" style="background-color: #e3f2fd; border: 1px solid #2196F3; color: #0d47a1;">
+                <strong>ℹ️ Information :</strong> Le net à payer sera calculé automatiquement :
+                <em>Salaire de base + Primes - Déductions</em>
+            </div>
+
+            <div class="btn-container">
+                <a th:href="@{/fiches-paie}" class="btn btn-secondary">❌ Annuler</a>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

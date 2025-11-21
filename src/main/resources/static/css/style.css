@@ -1,0 +1,473 @@
+/* Reset et styles de base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ========== STYLES POUR HOME PAGE (avec sidebar) ========== */
+body.home-page {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+/* Zone de contenu principale (à droite de la sidebar) */
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f5f5f5;
+}
+
+/* Message de bienvenue */
+.welcome-message {
+    text-align: center;
+    margin-top: 100px;
+    color: #666;
+}
+
+.welcome-message h1 {
+    font-size: 2.5em;
+    color: #333;
+}
+
+.welcome-message p {
+    font-size: 1.2em;
+    margin-top: 20px;
+}
+
+/* En-tête de contenu */
+.content-header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4CAF50;
+}
+
+.content-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+/* Actions dans la zone de contenu */
+.content .header-actions {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.content .header-actions .btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+}
+
+.content .header-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.5);
+}
+
+/* Formulaires dans la zone de contenu */
+.content .form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.content .form-container h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Cartes du dashboard */
+.dashboard-card {
+    background: white;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-card h3 {
+    margin-top: 0;
+    color: #4CAF50;
+}
+
+.stat-number {
+    font-size: 3em;
+    font-weight: bold;
+    color: #4CAF50;
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin: 0 0 30px 0;
+    padding: 0 20px;
+    font-size: 1.5em;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 15px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    margin: 0;
+}
+
+.sidebar a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 15px 25px;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.sidebar a:hover {
+    background: rgba(76, 175, 80, 0.2);
+    border-left-color: #4CAF50;
+    padding-left: 30px;
+}
+
+.sidebar a.active {
+    background: rgba(76, 175, 80, 0.3);
+    border-left-color: #4CAF50;
+}
+
+.sidebar-icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+/* ========== CONTAINER PRINCIPAL (pour autres pages) ========== */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+/* ========== TITRES ========== */
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2em;
+    text-align: center;
+}
+
+h2 {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Header avec actions */
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* ========== BOUTONS ========== */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    margin: 0 3px;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+/* ========== TABLEAUX ========== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* Tables dans la zone de contenu (home page) */
+.content table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.content th {
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #ddd;
+}
+
+.content td {
+    border: 1px solid #ddd;
+}
+
+.content tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Tables générales */
+thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+tbody tr {
+    transition: all 0.3s ease;
+}
+
+tbody tr:hover {
+    background: #f8f9ff;
+    transform: scale(1.01);
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+/* ========== ÉTAT VIDE ========== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+/* ========== FORMULAIRES ========== */
+.form-group {
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.btn-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-container .btn {
+    flex: 1;
+    padding: 14px 28px;
+}
+
+.required {
+    color: #f5576c;
+}
+
+/* ========== MESSAGES D'ALERTE ========== */
+.alert {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.error-message {
+    color: #f5576c;
+    font-size: 0.85em;
+    margin-top: 5px;
+    display: block;
+}
+
+input.error,
+select.error {
+    border-color: #f5576c;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    body.home-page {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+
+    .content {
+        padding: 15px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    table {
+        font-size: 0.85em;
+    }
+
+    th, td {
+        padding: 8px 5px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .btn-small {
+        padding: 5px 8px;
+        font-size: 0.8em;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-message h1 {
+        font-size: 1.8em;
+    }
+}
+
+/* ========== STYLE SPÉCIFIQUE POUR LA PAGE FORMULAIRE ========== */
+body.form-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.form-page .container {
+    max-width: 800px;
+    padding: 40px;
+}

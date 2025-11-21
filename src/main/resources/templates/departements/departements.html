@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des départements</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <div class="content-header">
+        <h1>🏛️ Gestion des Départements</h1>
+    </div>
+
+    <!-- Messages de succès -->
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <!-- Messages d'erreur -->
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="header-actions">
+        <a th:href="@{/departements/add}" class="btn">➕ Ajouter un département</a>
+    </div>
+
+    <div th:if="${departements != null and !departements.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Intitulé</th>
+                <th>Chef de département</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="departement : ${departements}">
+                <td th:text="${departement.id}"></td>
+                <td th:text="${departement.intitule}"></td>
+                <td>
+                        <span th:if="${departement.chefDepartement != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == departement.chefDepartement}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
+                    <span th:if="${departement.chefDepartement == null}">-</span>
+                </td>
+                <td class="actions">
+                    <a th:href="@{/departements/edit/{id}(id=${departement.id})}"
+                       class="btn btn-small btn-edit">✏️ Modifier</a>
+                    <a th:href="@{/departements/delete/{id}(id=${departement.id})}"
+                       class="btn btn-small btn-delete"
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce département ?')">
+                        🗑️ Supprimer</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${departements == null or departements.isEmpty()}" class="dashboard-card">
+        <h2>Aucun département trouvé</h2>
+        <p>Commencez par ajouter votre premier département</p>
+    </div>
+</div>
+</body>
+</html>

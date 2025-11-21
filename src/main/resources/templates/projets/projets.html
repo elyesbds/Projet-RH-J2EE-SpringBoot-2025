@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des projets</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <div class="content-header">
+        <h1>📁 Gestion des Projets</h1>
+    </div>
+
+    <!-- Messages de succès -->
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <!-- Messages d'erreur -->
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="header-actions">
+        <a th:href="@{/projets/add}" class="btn">➕ Ajouter un projet</a>
+    </div>
+
+    <div th:if="${projets != null and !projets.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom du projet</th>
+                <th>État</th>
+                <th>Date début</th>
+                <th>Date fin prévue</th>
+                <th>Date fin réelle</th>
+                <th>Chef de projet</th>
+                <th>Département</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="projet : ${projets}">
+                <td th:text="${projet.id}"></td>
+                <td th:text="${projet.nomProjet}"></td>
+                <td>
+                        <span th:if="${projet.etatProjet == 'EN_COURS'}" style="color: #4CAF50; font-weight: bold;">
+                            ⏳ EN COURS
+                        </span>
+                    <span th:if="${projet.etatProjet == 'TERMINE'}" style="color: #2196F3; font-weight: bold;">
+                            ✅ TERMINÉ
+                        </span>
+                    <span th:if="${projet.etatProjet == 'ANNULE'}" style="color: #f44336; font-weight: bold;">
+                            ❌ ANNULÉ
+                        </span>
+                </td>
+                <td th:text="${projet.dateDebut}"></td>
+                <td th:text="${projet.dateFinPrevue}"></td>
+                <td th:text="${projet.dateFinReelle != null ? projet.dateFinReelle : '-'}"></td>
+                <td>
+                        <span th:if="${projet.chefProjet != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == projet.chefProjet}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
+                    <span th:if="${projet.chefProjet == null}">-</span>
+                </td>
+                <td>
+                        <span th:if="${projet.idDepartement != null}">
+                            <span th:each="dept : ${departements}">
+                                <span th:if="${dept.id == projet.idDepartement}"
+                                      th:text="${dept.intitule}"></span>
+                            </span>
+                        </span>
+                    <span th:if="${projet.idDepartement == null}">-</span>
+                </td>
+                <td class="actions">
+                    <a th:href="@{/projets/edit/{id}(id=${projet.id})}"
+                       class="btn btn-small btn-edit">✏️ Modifier</a>
+                    <a th:href="@{/projets/delete/{id}(id=${projet.id})}"
+                       class="btn btn-small btn-delete"
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')">
+                        🗑️ Supprimer</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${projets == null or projets.isEmpty()}" class="dashboard-card">
+        <h2>Aucun projet trouvé</h2>
+        <p>Commencez par ajouter votre premier projet</p>
+    </div>
+</div>
+</body>
+</html>

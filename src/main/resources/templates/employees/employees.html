@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des employés</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <div class="content-header">
+        <h1>👥 Gestion des Employés</h1>
+    </div>
+
+    <!-- Messages de succès -->
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <!-- Messages d'erreur -->
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="header-actions">
+        <a th:href="@{/employees/add}" class="btn">➕ Ajouter un employé</a>
+    </div>
+
+    <div th:if="${employees != null and !employees.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Matricule</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Poste</th>
+                <th>Grade</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="employee : ${employees}">
+                <td th:text="${employee.id}"></td>
+                <td th:text="${employee.matricule}"></td>
+                <td th:text="${employee.nom}"></td>
+                <td th:text="${employee.prenom}"></td>
+                <td th:text="${employee.email}"></td>
+                <td th:text="${employee.telephone}"></td>
+                <td th:text="${employee.poste}"></td>
+                <td th:text="${employee.grade}"></td>
+                <td class="actions">
+                    <a th:href="@{/employees/edit/{id}(id=${employee.id})}" class="btn btn-small btn-edit">✏️ Modifier</a>
+                    <a th:href="@{/employees/delete/{id}(id=${employee.id})}"
+                       class="btn btn-small btn-delete"
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')">🗑️ Supprimer</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${employees == null or employees.isEmpty()}" class="dashboard-card">
+        <h2>Aucun employé trouvé</h2>
+        <p>Commencez par ajouter votre premier employé</p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des fiches de paie</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <div class="content-header">
+        <h1>💰 Gestion des Fiches de Paie</h1>
+    </div>
+
+    <!-- Messages de succès -->
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <!-- Messages d'erreur -->
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="header-actions">
+        <a th:href="@{/fiches-paie/add}" class="btn">➕ Ajouter une fiche de paie</a>
+    </div>
+
+    <div th:if="${fichesPaie != null and !fichesPaie.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employé</th>
+                <th>Mois</th>
+                <th>Année</th>
+                <th>Salaire base</th>
+                <th>Primes</th>
+                <th>Déductions</th>
+                <th>Net à payer</th>
+                <th>Date génération</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="fiche : ${fichesPaie}">
+                <td th:text="${fiche.id}"></td>
+                <td>
+                        <span th:if="${fiche.idEmployer != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == fiche.idEmployer}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
+                    <span th:if="${fiche.idEmployer == null}">-</span>
+                </td>
+                <td th:text="${fiche.mois}"></td>
+                <td th:text="${fiche.annee}"></td>
+                <td th:text="${#numbers.formatDecimal(fiche.salaireBase, 1, 2) + ' €'}"></td>
+                <td th:text="${#numbers.formatDecimal(fiche.primes, 1, 2) + ' €'}"></td>
+                <td th:text="${#numbers.formatDecimal(fiche.deductions, 1, 2) + ' €'}"></td>
+                <td style="font-weight: bold; color: #4CAF50; font-size: 1.1em;"
+                    th:text="${#numbers.formatDecimal(fiche.netAPayer, 1, 2) + ' €'}"></td>
+                <td th:text="${fiche.dateGeneration}"></td>
+                <td class="actions">
+                    <a th:href="@{/fiches-paie/edit/{id}(id=${fiche.id})}"
+                       class="btn btn-small btn-edit">✏️ Modifier</a>
+                    <a th:href="@{/fiches-paie/delete/{id}(id=${fiche.id})}"
+                       class="btn btn-small btn-delete"
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette fiche de paie ?')">
+                        🗑️ Supprimer</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${fichesPaie == null or fichesPaie.isEmpty()}" class="dashboard-card">
+        <h2>Aucune fiche de paie trouvée</h2>
+        <p>Commencez par ajouter votre première fiche de paie</p>
+    </div>
+</div>
+</body>
+</html>

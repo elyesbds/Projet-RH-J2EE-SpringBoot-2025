@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil - Gestion RH</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:insert="fragments/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="content">
+    <!-- Message de bienvenue par défaut (affiché uniquement si aucune section n'est active) -->
+    <div th:if="${showEmployees == null or (!showEmployees and !showDashboard and !showStatistics and !showDepartements and !showProjets and !showFichesPaie)}" class="welcome-message">
+        <h1>🏢 Bienvenue dans le système de gestion RH</h1>
+        <p>Sélectionnez une option dans le menu de gauche pour commencer</p>
+    </div>
+
+    <!-- Section: Liste des employés -->
+    <div th:if="${showEmployees != null and showEmployees}">
+        <div class="content-header">
+            <h2>📋 Liste des employés</h2>
+        </div>
+
+        <div class="header-actions">
+            <a th:href="@{/employees}" class="btn btn-primary">
+                ✏️ Gérer les employés (Ajouter/Modifier/Supprimer)
+            </a>
+        </div>
+
+        <div th:if="${employees != null && !employees.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Matricule</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Poste</th>
+                    <th>Grade</th>
+                    <th>Salaire</th>
+                    <th>Date Embauche</th>
+                    <th>Département</th>
+                    <th>Role</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="employee : ${employees}">
+                    <td th:text="${employee.id}"></td>
+                    <td th:text="${employee.matricule}"></td>
+                    <td th:text="${employee.nom}"></td>
+                    <td th:text="${employee.prenom}"></td>
+                    <td th:text="${employee.email}"></td>
+                    <td th:text="${employee.telephone}"></td>
+                    <td th:text="${employee.poste}"></td>
+                    <td th:text="${employee.grade}"></td>
+                    <td th:text="${employee.salaireBase}"></td>
+                    <td th:text="${employee.dateEmbauche}"></td>
+                    <td th:text="${employee.idDepartement}"></td>
+                    <td th:text="${employee.role}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${employees == null || employees.isEmpty()}" class="dashboard-card">
+            <p style="text-align: center; color: #666;">Aucun employé trouvé dans la base de données.</p>
+        </div>
+    </div>
+
+    <!-- Section: Dashboard -->
+    <div th:if="${showDashboard != null and showDashboard}">
+        <div class="content-header">
+            <h2>📊 Tableau de bord</h2>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Nombre total d'employés</h3>
+            <div class="stat-number" th:text="${employeeCount}">0</div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Statistiques générales</h3>
+            <p>Bienvenue sur votre tableau de bord. Vous pouvez visualiser ici les indicateurs clés de votre entreprise.</p>
+        </div>
+    </div>
+
+    <!-- Section: Statistiques -->
+    <div th:if="${showStatistics != null and showStatistics}">
+        <div class="content-header">
+            <h2>📈 Statistiques</h2>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Analyses détaillées</h3>
+            <p>Section réservée aux statistiques avancées et aux rapports.</p>
+        </div>
+    </div>
+
+    <!-- Section: Liste des départements -->
+    <div th:if="${showDepartements != null and showDepartements}">
+        <div class="content-header">
+            <h2>🏛️ Liste des départements</h2>
+        </div>
+
+        <div class="header-actions">
+            <a th:href="@{/departements}" class="btn btn-primary">
+                ✏️ Gérer les départements (Ajouter/Modifier/Supprimer)
+            </a>
+        </div>
+
+        <div th:if="${departements != null && !departements.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Intitulé</th>
+                    <th>Chef de département (ID)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="departement : ${departements}">
+                    <td th:text="${departement.id}"></td>
+                    <td th:text="${departement.intitule}"></td>
+                    <td th:text="${departement.chefDepartement}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${departements == null || departements.isEmpty()}" class="dashboard-card">
+            <p style="text-align: center; color: #666;">Aucun département trouvé dans la base de données.</p>
+        </div>
+    </div>
+
+    <!-- Section: Liste des projets -->
+    <div th:if="${showProjets != null and showProjets}">
+        <div class="content-header">
+            <h2>📁 Liste des projets</h2>
+        </div>
+
+        <div class="header-actions">
+            <a th:href="@{/projets}" class="btn btn-primary">
+                ✏️ Gérer les projets (Ajouter/Modifier/Supprimer)
+            </a>
+        </div>
+
+        <div th:if="${projets != null && !projets.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom du projet</th>
+                    <th>État</th>
+                    <th>Date début</th>
+                    <th>Date fin prévue</th>
+                    <th>Chef de projet</th>
+                    <th>Département</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="projet : ${projets}">
+                    <td th:text="${projet.id}"></td>
+                    <td th:text="${projet.nomProjet}"></td>
+                    <td th:text="${projet.etatProjet}"></td>
+                    <td th:text="${projet.dateDebut}"></td>
+                    <td th:text="${projet.dateFinPrevue}"></td>
+                    <td>
+                                <span th:if="${projet.chefProjet != null}">
+                                    <span th:each="emp : ${employees}">
+                                        <span th:if="${emp.id == projet.chefProjet}"
+                                              th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                                    </span>
+                                </span>
+                        <span th:if="${projet.chefProjet == null}">-</span>
+                    </td>
+                    <td>
+                                <span th:if="${projet.idDepartement != null}">
+                                    <span th:each="dept : ${departements}">
+                                        <span th:if="${dept.id == projet.idDepartement}"
+                                              th:text="${dept.intitule}"></span>
+                                    </span>
+                                </span>
+                        <span th:if="${projet.idDepartement == null}">-</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${projets == null || projets.isEmpty()}" class="dashboard-card">
+            <p style="text-align: center; color: #666;">Aucun projet trouvé dans la base de données.</p>
+        </div>
+    </div>
+
+    <!-- Section: Liste des fiches de paie -->
+    <div th:if="${showFichesPaie != null and showFichesPaie}">
+        <div class="content-header">
+            <h2>💰 Liste des fiches de paie</h2>
+        </div>
+
+        <div class="header-actions">
+            <a th:href="@{/fiches-paie}" class="btn btn-primary">
+                ✏️ Gérer les fiches de paie (Ajouter/Modifier/Supprimer)
+            </a>
+        </div>
+
+        <div th:if="${fichesPaie != null && !fichesPaie.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Employé</th>
+                    <th>Période</th>
+                    <th>Salaire base</th>
+                    <th>Primes</th>
+                    <th>Déductions</th>
+                    <th>Net à payer</th>
+                    <th>Date génération</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="fiche : ${fichesPaie}">
+                    <td th:text="${fiche.id}"></td>
+                    <td>
+                                <span th:if="${fiche.idEmployer != null}">
+                                    <span th:each="emp : ${employees}">
+                                        <span th:if="${emp.id == fiche.idEmployer}"
+                                              th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                                    </span>
+                                </span>
+                        <span th:if="${fiche.idEmployer == null}">-</span>
+                    </td>
+                    <td th:text="${fiche.mois + '/' + fiche.annee}"></td>
+                    <td th:text="${fiche.salaireBase + ' €'}"></td>
+                    <td th:text="${fiche.primes + ' €'}"></td>
+                    <td th:text="${fiche.deductions + ' €'}"></td>
+                    <td style="font-weight: bold; color: #4CAF50;" th:text="${fiche.netAPayer + ' €'}"></td>
+                    <td th:text="${fiche.dateGeneration}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${fichesPaie == null || fichesPaie.isEmpty()}" class="dashboard-card">
+            <p style="text-align: center; color: #666;">Aucune fiche de paie trouvée dans la base de données.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
