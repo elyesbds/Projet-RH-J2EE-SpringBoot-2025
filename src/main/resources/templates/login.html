@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - CY RH</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar (désactivée) -->
+<div class="sidebar sidebar-disabled">
+    <h2>🏢 CY RH</h2>
+    <ul>
+        <li>
+            <a th:href="@{/home}" class="active">
+                <span class="sidebar-icon">🏠</span> Accueil
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">📊</span> Tableau de bord
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">👥</span> Employés
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">🏛️</span> Départements
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">📁</span> Projets
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">💰</span> Fiches de paie
+            </a>
+        </li>
+        <li>
+            <a class="disabled">
+                <span class="sidebar-icon">📈</span> Statistiques
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- Main content -->
+<div class="content">
+    <!-- Bouton de connexion en haut à droite -->
+    <div class="header-auth">
+        <span class="auth-status">Non connecté</span>
+    </div>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h1>🔐 Connexion</h1>
+            <p class="login-subtitle">Connectez-vous pour accéder au système RH</p>
+
+            <!-- Messages d'erreur -->
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <span th:text="${errorMessage}"></span>
+            </div>
+
+            <!-- Messages de déconnexion -->
+            <div th:if="${logoutMessage}" class="alert alert-success">
+                <span th:text="${logoutMessage}"></span>
+            </div>
+
+            <form th:action="@{/perform_login}" method="post">
+                <div class="form-group">
+                    <label for="username">Email professionnel</label>
+                    <input type="email" id="username" name="username"
+                           required placeholder="exemple@cy-rh.local"
+                           autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password"
+                           required placeholder="••••••••"
+                           autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    🔓 Se connecter
+                </button>
+            </form>
+
+            <div class="login-info">
+                <p><strong>ℹ️ Information :</strong> Seuls les employés enregistrés peuvent se connecter.
+                    Contactez votre administrateur RH si vous rencontrez des difficultés.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

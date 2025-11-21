@@ -92,6 +92,91 @@ body.home-page {
     color: #333;
 }
 
+/* ========== AUTHENTIFICATION ========== */
+.header-auth {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.auth-status {
+    color: #666;
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    padding: 8px 16px;
+    font-size: 0.9em;
+}
+
+.btn-logout {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    padding: 8px 16px;
+    font-size: 0.9em;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+}
+
+/* Page de connexion */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    max-width: 450px;
+    width: 100%;
+}
+
+.login-box h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 0.95em;
+}
+
+.login-info {
+    margin-top: 25px;
+    padding: 15px;
+    background: #e3f2fd;
+    border-left: 4px solid #2196F3;
+    border-radius: 5px;
+    font-size: 0.9em;
+    color: #0d47a1;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05em;
+}
+
 /* Cartes du dashboard */
 .dashboard-card {
     background: white;
@@ -153,7 +238,7 @@ body.home-page {
     border-left: 4px solid transparent;
 }
 
-.sidebar a:hover {
+.sidebar a:hover:not(.disabled) {
     background: rgba(76, 175, 80, 0.2);
     border-left-color: #4CAF50;
     padding-left: 30px;
@@ -162,6 +247,11 @@ body.home-page {
 .sidebar a.active {
     background: rgba(76, 175, 80, 0.3);
     border-left-color: #4CAF50;
+}
+
+.sidebar a.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .sidebar-icon {
@@ -185,6 +275,13 @@ h1 {
     margin-bottom: 30px;
     font-size: 2em;
     text-align: center;
+}
+
+/* Titre dans content-header (pour les pages avec sidebar) */
+.content-header h1 {
+    text-align: left;
+    font-size: 2em;
+    margin: 0;
 }
 
 h2 {

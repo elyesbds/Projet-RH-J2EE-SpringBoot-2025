@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Accueil - Gestion RH</title>
@@ -7,10 +8,24 @@
 </head>
 <body class="home-page">
 <!-- Sidebar -->
-<div th:insert="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <!-- Main content -->
 <div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+                <span class="auth-status">
+                    👤 <span sec:authentication="name"></span>
+                </span>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+        <div sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}" class="btn btn-login">🔐 Se connecter</a>
+        </div>
+    </div>
     <!-- Message de bienvenue par défaut (affiché uniquement si aucune section n'est active) -->
     <div th:if="${showEmployees == null or (!showEmployees and !showDashboard and !showStatistics and !showDepartements and !showProjets and !showFichesPaie)}" class="welcome-message">
         <h1>🏢 Bienvenue dans le système de gestion RH</h1>

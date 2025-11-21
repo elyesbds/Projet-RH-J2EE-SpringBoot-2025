@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
 </head>
@@ -13,33 +14,63 @@
                 <span class="sidebar-icon">🏠</span> Accueil
             </a>
         </li>
-        <li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/dashboard}">
                 <span class="sidebar-icon">📊</span> Tableau de bord
             </a>
         </li>
-        <li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
+                <span class="sidebar-icon">📊</span> Tableau de bord
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/employees}">
                 <span class="sidebar-icon">👥</span> Employés
             </a>
         </li>
-        <li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
+                <span class="sidebar-icon">👥</span> Employés
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/departements}">
                 <span class="sidebar-icon">🏛️</span> Départements
             </a>
         </li>
-        <li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
+                <span class="sidebar-icon">🏛️</span> Départements
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/projets}">
                 <span class="sidebar-icon">📁</span> Projets
             </a>
         </li>
-        <li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
+                <span class="sidebar-icon">📁</span> Projets
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/fiches-paie}">
                 <span class="sidebar-icon">💰</span> Fiches de paie
             </a>
         </li>
-        <li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
+                <span class="sidebar-icon">💰</span> Fiches de paie
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/statistics}">
+                <span class="sidebar-icon">📈</span> Statistiques
+            </a>
+        </li>
+        <li sec:authorize="!isAuthenticated()">
+            <a class="disabled">
                 <span class="sidebar-icon">📈</span> Statistiques
             </a>
         </li>
