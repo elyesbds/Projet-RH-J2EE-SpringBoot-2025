@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,22 @@
 </head>
 <body class="home-page">
 <!-- Sidebar -->
-<div th:insert="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <!-- Main content -->
 <div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+            <span class="auth-status">
+                👤 <span sec:authentication="name"></span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
     <div class="content-header">
         <h1>📁 Gestion des Projets</h1>
     </div>
@@ -27,11 +40,24 @@
     </div>
 
     <div class="header-actions">
-        <a th:href="@{/projets/add}" class="btn">➕ Ajouter un projet</a>
+        <!-- Bouton visible uniquement pour ADMIN et CHEF_PROJET -->
+        <a th:href="@{/projets/add}" class="btn"
+           sec:authorize="hasAnyRole('ADMIN', 'CHEF_PROJET')">➕ Ajouter un projet</a>
+    </div>
+
+    <!-- Section Recherche et Filtres -->
+    <div th:if="${projets != null and !projets.isEmpty()}" class="search-filter-section">
+        <div class="search-box">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="🔍 Rechercher un projet (nom, chef, département...)"
+                   autocomplete="off">
+        </div>
+        <div id="filterContainer"></div>
     </div>
 
     <div th:if="${projets != null and !projets.isEmpty()}">
-        <table>
+        <table id="projetsTable">
             <thead>
             <tr>
                 <th>ID</th>
@@ -50,44 +76,68 @@
                 <td th:text="${projet.id}"></td>
                 <td th:text="${projet.nomProjet}"></td>
                 <td>
-                        <span th:if="${projet.etatProjet == 'EN_COURS'}" style="color: #4CAF50; font-weight: bold;">
-                            ⏳ EN COURS
-                        </span>
-                    <span th:if="${projet.etatProjet == 'TERMINE'}" style="color: #2196F3; font-weight: bold;">
-                            ✅ TERMINÉ
-                        </span>
-                    <span th:if="${projet.etatProjet == 'ANNULE'}" style="color: #f44336; font-weight: bold;">
-                            ❌ ANNULÉ
-                        </span>
+                    <span th:if="${projet.etatProjet == 'EN_COURS'}" class="badge badge-success">
+                        ⏳ EN COURS
+                    </span>
+                    <span th:if="${projet.etatProjet == 'TERMINE'}" class="badge badge-info">
+                        ✅ TERMINÉ
+                    </span>
+                    <span th:if="${projet.etatProjet == 'ANNULE'}" class="badge badge-danger">
+                        ❌ ANNULÉ
+                    </span>
                 </td>
                 <td th:text="${projet.dateDebut}"></td>
                 <td th:text="${projet.dateFinPrevue}"></td>
                 <td th:text="${projet.dateFinReelle != null ? projet.dateFinReelle : '-'}"></td>
                 <td>
-                        <span th:if="${projet.chefProjet != null}">
-                            <span th:each="emp : ${employees}">
-                                <span th:if="${emp.id == projet.chefProjet}"
-                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
-                            </span>
+                    <span th:if="${projet.chefProjet != null}">
+                        <span th:each="emp : ${employees}">
+                            <span th:if="${emp.id == projet.chefProjet}"
+                                  th:text="${emp.prenom + ' ' + emp.nom}"></span>
                         </span>
+                    </span>
                     <span th:if="${projet.chefProjet == null}">-</span>
                 </td>
                 <td>
-                        <span th:if="${projet.idDepartement != null}">
-                            <span th:each="dept : ${departements}">
-                                <span th:if="${dept.id == projet.idDepartement}"
-                                      th:text="${dept.intitule}"></span>
-                            </span>
+                    <span th:if="${projet.idDepartement != null}">
+                        <span th:each="dept : ${departements}">
+                            <span th:if="${dept.id == projet.idDepartement}"
+                                  th:text="${dept.intitule}"></span>
                         </span>
+                    </span>
                     <span th:if="${projet.idDepartement == null}">-</span>
                 </td>
                 <td class="actions">
-                    <a th:href="@{/projets/edit/{id}(id=${projet.id})}"
-                       class="btn btn-small btn-edit">✏️ Modifier</a>
-                    <a th:href="@{/projets/delete/{id}(id=${projet.id})}"
-                       class="btn btn-small btn-delete"
-                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')">
-                        🗑️ Supprimer</a>
+                    <!-- Bouton Affectations visible pour tous les connectés -->
+                    <a th:href="@{/affectations/projet/{id}(id=${projet.id})}"
+                       class="btn btn-small btn-primary"
+                       sec:authorize="isAuthenticated()">
+                        👥 Affectations</a>
+
+                    <!-- Boutons Modifier/Supprimer visibles uniquement pour ADMIN ou le chef du projet -->
+                    <span sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/projets/edit/{id}(id=${projet.id})}"
+                           class="btn btn-small btn-edit">✏️ Modifier</a>
+                        <a th:href="@{/projets/delete/{id}(id=${projet.id})}"
+                           class="btn btn-small btn-delete"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')">
+                           🗑️ Supprimer</a>
+                    </span>
+
+                    <!-- Pour les chefs de projet : vérifier s'ils sont chef de CE projet -->
+                    <span sec:authorize="hasRole('CHEF_PROJET') and !hasRole('ADMIN')"
+                          th:with="currentUserEmail=${#authentication.name}">
+                        <span th:each="emp : ${employees}">
+                            <span th:if="${emp.email == currentUserEmail and emp.id == projet.chefProjet}">
+                                <a th:href="@{/projets/edit/{id}(id=${projet.id})}"
+                                   class="btn btn-small btn-edit">✏️ Modifier</a>
+                                <a th:href="@{/projets/delete/{id}(id=${projet.id})}"
+                                   class="btn btn-small btn-delete"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')">
+                                   🗑️ Supprimer</a>
+                            </span>
+                        </span>
+                    </span>
                 </td>
             </tr>
             </tbody>
@@ -99,5 +149,18 @@
         <p>Commencez par ajouter votre premier projet</p>
     </div>
 </div>
+
+<script th:src="@{/js/search-filters.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('projetsTable');
+        const searchInput = document.getElementById('searchInput');
+        const filterContainer = document.getElementById('filterContainer');
+
+        if (table && searchInput && filterContainer) {
+            initTableSearchFilter('projetsTable', 'searchInput', 'filterContainer');
+        }
+    });
+</script>
 </body>
 </html>

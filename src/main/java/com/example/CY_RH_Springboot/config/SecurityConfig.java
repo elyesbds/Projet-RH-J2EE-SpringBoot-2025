@@ -19,6 +19,7 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/home").permitAll() // Page d'accueil accessible sans connexion
+                        .requestMatchers("/affectations/**").authenticated() // Gestion des affectations nécessite authentification
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

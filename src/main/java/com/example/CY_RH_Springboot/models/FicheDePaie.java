@@ -13,7 +13,7 @@ public class FicheDePaie {
     private Integer id;
 
     @Column(name = "Id_employer", nullable = false)
-    private Integer idEmployer;
+    private Long idEmployer;
 
     @Column(name = "Mois", nullable = false)
     private Integer mois;
@@ -47,11 +47,11 @@ public class FicheDePaie {
         this.id = id;
     }
 
-    public Integer getIdEmployer() {
+    public Long getIdEmployer() {
         return idEmployer;
     }
 
-    public void setIdEmployer(Integer idEmployer) {
+    public void setIdEmployer(Long idEmployer) {
         this.idEmployer = idEmployer;
     }
 

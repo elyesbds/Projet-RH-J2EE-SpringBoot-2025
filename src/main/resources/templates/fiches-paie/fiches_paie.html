@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,22 @@
 </head>
 <body class="home-page">
 <!-- Sidebar -->
-<div th:insert="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <!-- Main content -->
 <div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+            <span class="auth-status">
+                👤 <span sec:authentication="name"></span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
     <div class="content-header">
         <h1>💰 Gestion des Fiches de Paie</h1>
     </div>
@@ -27,11 +40,23 @@
     </div>
 
     <div class="header-actions">
-        <a th:href="@{/fiches-paie/add}" class="btn">➕ Ajouter une fiche de paie</a>
+        <!-- Bouton visible uniquement pour ADMIN et CHEF_DEPT -->
+        <a th:href="@{/fiches-paie/add}" class="btn" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">➕ Ajouter une fiche de paie</a>
+    </div>
+
+    <!-- Section Recherche et Filtres -->
+    <div th:if="${fichesPaie != null and !fichesPaie.isEmpty()}" class="search-filter-section">
+        <div class="search-box">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="🔍 Rechercher une fiche de paie (employé, mois, année...)"
+                   autocomplete="off">
+        </div>
+        <div id="filterContainer"></div>
     </div>
 
     <div th:if="${fichesPaie != null and !fichesPaie.isEmpty()}">
-        <table>
+        <table id="fichesPaieTable">
             <thead>
             <tr>
                 <th>ID</th>
@@ -43,30 +68,26 @@
                 <th>Déductions</th>
                 <th>Net à payer</th>
                 <th>Date génération</th>
-                <th>Actions</th>
+                <th sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">Actions</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="fiche : ${fichesPaie}">
                 <td th:text="${fiche.id}"></td>
                 <td>
-                        <span th:if="${fiche.idEmployer != null}">
-                            <span th:each="emp : ${employees}">
-                                <span th:if="${emp.id == fiche.idEmployer}"
-                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
-                            </span>
-                        </span>
-                    <span th:if="${fiche.idEmployer == null}">-</span>
+                    <span th:each="emp : ${employees}">
+                        <span th:if="${emp.id == fiche.idEmployer}"
+                              th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                    </span>
                 </td>
                 <td th:text="${fiche.mois}"></td>
                 <td th:text="${fiche.annee}"></td>
                 <td th:text="${#numbers.formatDecimal(fiche.salaireBase, 1, 2) + ' €'}"></td>
                 <td th:text="${#numbers.formatDecimal(fiche.primes, 1, 2) + ' €'}"></td>
                 <td th:text="${#numbers.formatDecimal(fiche.deductions, 1, 2) + ' €'}"></td>
-                <td style="font-weight: bold; color: #4CAF50; font-size: 1.1em;"
-                    th:text="${#numbers.formatDecimal(fiche.netAPayer, 1, 2) + ' €'}"></td>
+                <td class="highlight-amount" th:text="${#numbers.formatDecimal(fiche.netAPayer, 1, 2) + ' €'}"></td>
                 <td th:text="${fiche.dateGeneration}"></td>
-                <td class="actions">
+                <td class="actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">
                     <a th:href="@{/fiches-paie/edit/{id}(id=${fiche.id})}"
                        class="btn btn-small btn-edit">✏️ Modifier</a>
                     <a th:href="@{/fiches-paie/delete/{id}(id=${fiche.id})}"
@@ -81,8 +102,22 @@
 
     <div th:if="${fichesPaie == null or fichesPaie.isEmpty()}" class="dashboard-card">
         <h2>Aucune fiche de paie trouvée</h2>
-        <p>Commencez par ajouter votre première fiche de paie</p>
+        <p sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">Commencez par ajouter votre première fiche de paie</p>
+        <p sec:authorize="!hasAnyRole('ADMIN', 'CHEF_DEPT')">Vous n'avez pas encore de fiche de paie</p>
     </div>
 </div>
+
+<script th:src="@{/js/search-filters.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('fichesPaieTable');
+        const searchInput = document.getElementById('searchInput');
+        const filterContainer = document.getElementById('filterContainer');
+
+        if (table && searchInput && filterContainer) {
+            initTableSearchFilter('fichesPaieTable', 'searchInput', 'filterContainer');
+        }
+    });
+</script>
 </body>
 </html>

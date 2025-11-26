@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,22 @@
 </head>
 <body class="home-page">
 <!-- Sidebar -->
-<div th:insert="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <!-- Main content -->
 <div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+            <span class="auth-status">
+                👤 <span sec:authentication="name"></span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
     <div class="content-header">
         <h1>👥 Gestion des Employés</h1>
     </div>
@@ -27,11 +40,23 @@
     </div>
 
     <div class="header-actions">
-        <a th:href="@{/employees/add}" class="btn">➕ Ajouter un employé</a>
+        <!-- Bouton visible uniquement pour ADMIN -->
+        <a th:href="@{/employees/add}" class="btn" sec:authorize="hasRole('ADMIN')">➕ Ajouter un employé</a>
+    </div>
+
+    <!-- Section Recherche et Filtres -->
+    <div th:if="${employees != null and !employees.isEmpty()}" class="search-filter-section">
+        <div class="search-box">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="🔍 Rechercher un employé (nom, prénom, email, poste, matricule...)"
+                   autocomplete="off">
+        </div>
+        <div id="filterContainer"></div>
     </div>
 
     <div th:if="${employees != null and !employees.isEmpty()}">
-        <table>
+        <table id="employeesTable">
             <thead>
             <tr>
                 <th>ID</th>
@@ -42,7 +67,7 @@
                 <th>Téléphone</th>
                 <th>Poste</th>
                 <th>Grade</th>
-                <th>Actions</th>
+                <th sec:authorize="hasRole('ADMIN')">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -55,8 +80,9 @@
                 <td th:text="${employee.telephone}"></td>
                 <td th:text="${employee.poste}"></td>
                 <td th:text="${employee.grade}"></td>
-                <td class="actions">
-                    <a th:href="@{/employees/edit/{id}(id=${employee.id})}" class="btn btn-small btn-edit">✏️ Modifier</a>
+                <td class="actions" sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/employees/edit/{id}(id=${employee.id})}"
+                       class="btn btn-small btn-edit">✏️ Modifier</a>
                     <a th:href="@{/employees/delete/{id}(id=${employee.id})}"
                        class="btn btn-small btn-delete"
                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')">🗑️ Supprimer</a>
@@ -71,5 +97,18 @@
         <p>Commencez par ajouter votre premier employé</p>
     </div>
 </div>
+
+<script th:src="@{/js/search-filters.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('employeesTable');
+        const searchInput = document.getElementById('searchInput');
+        const filterContainer = document.getElementById('filterContainer');
+
+        if (table && searchInput && filterContainer) {
+            initTableSearchFilter('employeesTable', 'searchInput', 'filterContainer');
+        }
+    });
+</script>
 </body>
 </html>

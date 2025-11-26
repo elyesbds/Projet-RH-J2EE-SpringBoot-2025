@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Affectation</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="home-page">
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<!-- Main content -->
+<div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+                <span class="auth-status">
+                    👤 <span sec:authentication="name"></span>
+                </span>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1 th:text="${affectation.id != null ? '✏️ Modifier une affectation' : '➕ Affecter un employé'}"></h1>
+        <h3 style="text-align: center; color: #666; margin-bottom: 30px;">
+            Projet : <span th:text="${projet.nomProjet}" style="color: #4CAF50;"></span>
+        </h3>
+
+        <form th:action="@{/affectations/save}" th:object="${affectation}" method="post" novalidate>
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{idProjet}">
+
+            <div th:if="${#fields.hasErrors('global')}" class="alert alert-error">
+                <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="idEmployer">Employé <span class="required">*</span></label>
+                <select id="idEmployer" th:field="*{idEmployer}"
+                        th:classappend="${#fields.hasErrors('idEmployer')} ? 'error'" required>
+                    <option value="">-- Sélectionner un employé --</option>
+                    <option th:each="emp : ${employees}"
+                            th:value="${emp.id}"
+                            th:text="${emp.prenom + ' ' + emp.nom + ' - ' + emp.poste + ' (' + emp.matricule + ')'}">
+                    </option>
+                </select>
+                <span class="error-message" th:if="${#fields.hasErrors('idEmployer')}"
+                      th:errors="*{idEmployer}"></span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dateAffectation">Date d'affectation <span class="required">*</span></label>
+                    <input type="date" id="dateAffectation" th:field="*{dateAffectation}"
+                           th:classappend="${#fields.hasErrors('dateAffectation')} ? 'error'" required>
+                    <span class="error-message" th:if="${#fields.hasErrors('dateAffectation')}"
+                          th:errors="*{dateAffectation}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateFinAffectation">Date de fin d'affectation</label>
+                    <input type="date" id="dateFinAffectation" th:field="*{dateFinAffectation}"
+                           th:classappend="${#fields.hasErrors('dateFinAffectation')} ? 'error'">
+                    <span class="error-message" th:if="${#fields.hasErrors('dateFinAffectation')}"
+                          th:errors="*{dateFinAffectation}"></span>
+                    <small style="color: #666;">Laissez vide si l'affectation est toujours active</small>
+                </div>
+            </div>
+
+            <div class="alert" style="background-color: #e3f2fd; border: 1px solid #2196F3; color: #0d47a1;">
+                <strong>ℹ️ Information :</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>L'employé sera affecté au projet à partir de la date indiquée</li>
+                    <li>Si vous définissez une date de fin, l'affectation sera considérée comme terminée</li>
+                    <li>Vous pourrez modifier ces informations ultérieurement</li>
+                </ul>
+            </div>
+
+            <div class="btn-container">
+                <a th:href="@{/affectations/projet/{id}(id=${projet.id})}" class="btn btn-secondary">❌ Annuler</a>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

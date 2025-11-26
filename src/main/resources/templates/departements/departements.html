@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,22 @@
 </head>
 <body class="home-page">
 <!-- Sidebar -->
-<div th:insert="fragments/sidebar :: sidebar"></div>
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <!-- Main content -->
 <div class="content">
+    <!-- Bouton de connexion/déconnexion en haut à droite -->
+    <div class="header-auth">
+        <div sec:authorize="isAuthenticated()">
+            <span class="auth-status">
+                👤 <span sec:authentication="name"></span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
     <div class="content-header">
         <h1>🏛️ Gestion des Départements</h1>
     </div>
@@ -27,17 +40,29 @@
     </div>
 
     <div class="header-actions">
-        <a th:href="@{/departements/add}" class="btn">➕ Ajouter un département</a>
+        <!-- Bouton visible uniquement pour ADMIN -->
+        <a th:href="@{/departements/add}" class="btn" sec:authorize="hasRole('ADMIN')">➕ Ajouter un département</a>
+    </div>
+
+    <!-- Section Recherche et Filtres -->
+    <div th:if="${departements != null and !departements.isEmpty()}" class="search-filter-section">
+        <div class="search-box">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="🔍 Rechercher un département (intitulé, chef...)"
+                   autocomplete="off">
+        </div>
+        <div id="filterContainer"></div>
     </div>
 
     <div th:if="${departements != null and !departements.isEmpty()}">
-        <table>
+        <table id="departementsTable">
             <thead>
             <tr>
                 <th>ID</th>
                 <th>Intitulé</th>
                 <th>Chef de département</th>
-                <th>Actions</th>
+                <th sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -45,21 +70,39 @@
                 <td th:text="${departement.id}"></td>
                 <td th:text="${departement.intitule}"></td>
                 <td>
-                        <span th:if="${departement.chefDepartement != null}">
-                            <span th:each="emp : ${employees}">
-                                <span th:if="${emp.id == departement.chefDepartement}"
-                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
-                            </span>
+                    <span th:if="${departement.chefDepartement != null}">
+                        <span th:each="emp : ${employees}">
+                            <span th:if="${emp.id == departement.chefDepartement}"
+                                  th:text="${emp.prenom + ' ' + emp.nom}"></span>
                         </span>
+                    </span>
                     <span th:if="${departement.chefDepartement == null}">-</span>
                 </td>
-                <td class="actions">
-                    <a th:href="@{/departements/edit/{id}(id=${departement.id})}"
-                       class="btn btn-small btn-edit">✏️ Modifier</a>
-                    <a th:href="@{/departements/delete/{id}(id=${departement.id})}"
-                       class="btn btn-small btn-delete"
-                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce département ?')">
-                        🗑️ Supprimer</a>
+                <td class="actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">
+                    <!-- Boutons visibles pour ADMIN sur tous les départements -->
+                    <span sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/departements/edit/{id}(id=${departement.id})}"
+                           class="btn btn-small btn-edit">✏️ Modifier</a>
+                        <a th:href="@{/departements/delete/{id}(id=${departement.id})}"
+                           class="btn btn-small btn-delete"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce département ?')">
+                           🗑️ Supprimer</a>
+                    </span>
+
+                    <!-- Pour les chefs de département : vérifier s'ils sont chef de CE département -->
+                    <span sec:authorize="hasRole('CHEF_DEPT') and !hasRole('ADMIN')"
+                          th:with="currentUserEmail=${#authentication.name}">
+                        <span th:each="emp : ${employees}">
+                            <span th:if="${emp.email == currentUserEmail and emp.id == departement.chefDepartement}">
+                                <a th:href="@{/departements/edit/{id}(id=${departement.id})}"
+                                   class="btn btn-small btn-edit">✏️ Modifier</a>
+                                <a th:href="@{/departements/delete/{id}(id=${departement.id})}"
+                                   class="btn btn-small btn-delete"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce département ?')">
+                                   🗑️ Supprimer</a>
+                            </span>
+                        </span>
+                    </span>
                 </td>
             </tr>
             </tbody>
@@ -71,5 +114,18 @@
         <p>Commencez par ajouter votre premier département</p>
     </div>
 </div>
+
+<script th:src="@{/js/search-filters.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('departementsTable');
+        const searchInput = document.getElementById('searchInput');
+        const filterContainer = document.getElementById('filterContainer');
+
+        if (table && searchInput && filterContainer) {
+            initTableSearchFilter('departementsTable', 'searchInput', 'filterContainer');
+        }
+    });
+</script>
 </body>
 </html>

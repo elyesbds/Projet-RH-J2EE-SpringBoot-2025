@@ -38,7 +38,7 @@
             <h2>📋 Liste des employés</h2>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" sec:authorize="hasRole('ADMIN')">
             <a th:href="@{/employees}" class="btn btn-primary">
                 ✏️ Gérer les employés (Ajouter/Modifier/Supprimer)
             </a>
@@ -106,12 +106,149 @@
     <!-- Section: Statistiques -->
     <div th:if="${showStatistics != null and showStatistics}">
         <div class="content-header">
-            <h2>📈 Statistiques</h2>
+            <h2>📈 Statistiques & Rapports</h2>
         </div>
 
+        <!-- Statistiques générales -->
+        <div class="stats-grid">
+            <div class="stat-card stat-card-blue">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-number" th:text="${totalEmployees}">0</div>
+                    <div class="stat-label">Employés</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-green">
+                <div class="stat-icon">📁</div>
+                <div class="stat-content">
+                    <div class="stat-number" th:text="${totalProjets}">0</div>
+                    <div class="stat-label">Projets</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-purple">
+                <div class="stat-icon">🏛️</div>
+                <div class="stat-content">
+                    <div class="stat-number" th:text="${totalDepartements}">0</div>
+                    <div class="stat-label">Départements</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rapport: Employés par département -->
         <div class="dashboard-card">
-            <h3>Analyses détaillées</h3>
-            <p>Section réservée aux statistiques avancées et aux rapports.</p>
+            <h3>👥 Employés par département</h3>
+            <div class="chart-container">
+                <table class="stats-table">
+                    <thead>
+                    <tr>
+                        <th>Département</th>
+                        <th>Nombre d'employés</th>
+                        <th>Visualisation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${employeesPerDepartment}">
+                        <td th:text="${entry.key}"></td>
+                        <td th:text="${entry.value}"></td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill"
+                                     th:style="'width: ' + ${entry.value * 100.0 / totalEmployees} + '%'"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rapport: Employés par grade -->
+        <div class="dashboard-card">
+            <h3>🎓 Employés par grade</h3>
+            <div class="chart-container">
+                <table class="stats-table">
+                    <thead>
+                    <tr>
+                        <th>Grade</th>
+                        <th>Nombre d'employés</th>
+                        <th>Pourcentage</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${employeesPerGrade}">
+                        <td th:text="${entry.key}"></td>
+                        <td th:text="${entry.value}"></td>
+                        <td>
+                                    <span class="badge badge-info"
+                                          th:text="${#numbers.formatDecimal(entry.value * 100.0 / totalEmployees, 1, 1) + '%'}"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rapport: État des projets -->
+        <div class="dashboard-card">
+            <h3>📊 État des projets</h3>
+            <div class="chart-container">
+                <table class="stats-table">
+                    <thead>
+                    <tr>
+                        <th>État</th>
+                        <th>Nombre de projets</th>
+                        <th>Visualisation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${projetsPerEtat}">
+                        <td>
+                            <span th:if="${entry.key == 'EN_COURS'}" style="color: #4CAF50; font-weight: bold;">⏳ EN COURS</span>
+                            <span th:if="${entry.key == 'TERMINE'}" style="color: #2196F3; font-weight: bold;">✅ TERMINÉ</span>
+                            <span th:if="${entry.key == 'ANNULE'}" style="color: #f44336; font-weight: bold;">❌ ANNULÉ</span>
+                        </td>
+                        <td th:text="${entry.value}"></td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill"
+                                     th:classappend="${entry.key == 'EN_COURS' ? 'progress-green' : (entry.key == 'TERMINE' ? 'progress-blue' : 'progress-red')}"
+                                     th:style="'width: ' + ${entry.value * 100.0 / totalProjets} + '%'"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rapport: Employés par projet -->
+        <div class="dashboard-card">
+            <h3>📁 Employés affectés par projet</h3>
+            <div class="chart-container">
+                <table class="stats-table">
+                    <thead>
+                    <tr>
+                        <th>Projet</th>
+                        <th>Nombre d'employés affectés</th>
+                        <th>Visualisation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${employeesPerProjet}">
+                        <td th:text="${entry.key}"></td>
+                        <td th:text="${entry.value}"></td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-purple"
+                                     th:style="'width: ' + ${entry.value > 0 ? (entry.value * 10) : 0} + '%'"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -121,7 +258,7 @@
             <h2>🏛️ Liste des départements</h2>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">
             <a th:href="@{/departements}" class="btn btn-primary">
                 ✏️ Gérer les départements (Ajouter/Modifier/Supprimer)
             </a>
@@ -157,7 +294,7 @@
             <h2>📁 Liste des projets</h2>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT', 'CHEF_PROJET')">
             <a th:href="@{/projets}" class="btn btn-primary">
                 ✏️ Gérer les projets (Ajouter/Modifier/Supprimer)
             </a>
@@ -217,7 +354,7 @@
             <h2>💰 Liste des fiches de paie</h2>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">
             <a th:href="@{/fiches-paie}" class="btn btn-primary">
                 ✏️ Gérer les fiches de paie (Ajouter/Modifier/Supprimer)
             </a>
