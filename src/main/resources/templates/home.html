@@ -417,6 +417,7 @@
                     <th>Déductions</th>
                     <th>Net à payer</th>
                     <th>Date génération</th>
+                    <th>PDF</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -437,6 +438,11 @@
                     <td th:text="${fiche.deductions + ' €'}"></td>
                     <td class="highlight-amount" th:text="${fiche.netAPayer + ' €'}"></td>
                     <td th:text="${fiche.dateGeneration}"></td>
+
+                    <td>
+                        <a th:href="@{/fiches-paie/export/{id}/pdf(id=${fiche.id})}"
+                           class="btn btn-small btn-info">⬇️ PDF</a>
+                    </td>
                 </tr>
                 </tbody>
             </table>

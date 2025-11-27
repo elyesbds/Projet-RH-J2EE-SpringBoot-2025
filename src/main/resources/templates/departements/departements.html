@@ -42,6 +42,9 @@
     <div class="header-actions">
         <!-- Bouton visible uniquement pour ADMIN -->
         <a th:href="@{/departements/add}" class="btn" sec:authorize="hasRole('ADMIN')">➕ Ajouter un département</a>
+        <a th:href="@{/departements/export/pdf}" class="btn btn-secondary">
+            ⬇️ Exporter en PDF
+        </a>
     </div>
 
     <!-- Section Recherche et Filtres -->

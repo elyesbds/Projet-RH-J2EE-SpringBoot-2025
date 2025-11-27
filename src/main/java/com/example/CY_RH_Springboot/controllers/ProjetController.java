@@ -16,6 +16,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
 
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfWriter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Controller
 @RequestMapping("/projets")
 public class ProjetController {
@@ -181,5 +195,85 @@ public class ProjetController {
         projetRepository.delete(projet.get());
         redirectAttributes.addFlashAttribute("successMessage", "Projet supprimé avec succès");
         return "redirect:/projets";
+    }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportProjetsToPDF() throws IOException {
+
+        // 1. Récupération des données
+        List<Projet> projets = projetRepository.findAll();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4.rotate()); // Paysage pour plus de colonnes
+
+        // Initialisation du writer dans un bloc try-catch
+        try {
+            PdfWriter.getInstance(document, bos);
+            document.open();
+
+            // --- Titre du Document ---
+            Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontTitre.setSize(20);
+            Paragraph pTitre = new Paragraph("Rapport: Liste des Projets en cours au " + LocalDate.now(), fontTitre);
+            pTitre.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(pTitre);
+            document.add(new Paragraph(" "));
+
+            // --- Tableau des Projets ---
+
+            // 5 colonnes : ID, Nom du Projet, Date Début, Date Fin Prévue, Statut
+            PdfPTable table = new PdfPTable(5);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[] {1f, 4f, 2f, 2f, 2f});
+            table.setSpacingBefore(10);
+
+            // Entêtes du Tableau
+            Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontHeader.setSize(12);
+            String[] tableHeaders = {"ID", "Nom du Projet", "Date Début", "Date Fin Prévue", "Statut"};
+
+            for (String header : tableHeaders) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, fontHeader));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(new Color(255, 223, 186)); // Couleur orange clair pour le projet
+                cell.setPadding(5);
+                table.addCell(cell);
+            }
+
+            // Remplissage des Données
+            Font fontData = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            for (Projet projet : projets) {
+                table.addCell(new Phrase(projet.getId().toString(), fontData));
+                table.addCell(new Phrase(projet.getNomProjet(), fontData)); // ATTENTION: Assurez-vous que getNomProjet() existe
+
+                // Formatage des dates
+                table.addCell(new Phrase(projet.getDateDebut().format(dateFormatter), fontData));
+                table.addCell(new Phrase(projet.getDateFinPrevue().format(dateFormatter), fontData)); // ATTENTION: Assurez-vous que getDateFinPrevue() existe
+
+                // Affichage du statut
+                table.addCell(new Phrase(projet.getEtatProjet(), fontData)); // ATTENTION: Assurez-vous que getStatut() existe
+            }
+
+            document.add(table);
+            document.close();
+
+        } catch (DocumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 2. Préparation du ResponseEntity
+        byte[] pdfBytes = bos.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String filename = "rapport_projets_" + LocalDate.now() + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }

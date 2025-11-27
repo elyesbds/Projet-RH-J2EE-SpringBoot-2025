@@ -9,6 +9,21 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfWriter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -90,4 +105,78 @@ public class EmployeeController {
         redirectAttributes.addFlashAttribute("successMessage", "Employé supprimé avec succès");
         return "redirect:/employees";
     }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportEmployeesToPDF() throws IOException {
+
+        // 1. Récupération des données via votre repository
+        List<Employee> employees = employeeRepository.findAll();
+
+        // Création d'un flux de sortie en mémoire pour construire le PDF
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+        // 2. Configuration et écriture du document PDF
+        Document document = new Document(PageSize.A4.rotate());
+        PdfWriter.getInstance(document, bos); // Écriture dans le flux en mémoire
+        document.open();
+
+        // --- Contenu du PDF (Identique à la version précédente) ---
+
+        // Titre du Document
+        Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        fontTitre.setSize(20);
+        Paragraph p = new Paragraph("Rapport: Liste des Employés au " + LocalDate.now(), fontTitre);
+        p.setAlignment(Paragraph.ALIGN_CENTER);
+        document.add(p);
+        document.add(new Paragraph(" "));
+
+        // Création du Tableau (6 colonnes)
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[] {2.5f, 2.5f, 4f, 2.5f, 3f, 2f});
+        table.setSpacingBefore(10);
+
+        // Entêtes du Tableau
+        Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        String[] tableHeaders = {"Nom", "Prénom", "Email", "Téléphone", "Poste", "Grade"};
+        for (String header : tableHeaders) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, fontHeader));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setBackgroundColor(new Color(200, 200, 200));
+            table.addCell(cell);
+        }
+
+        // Remplissage des Données
+        Font fontData = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        for (Employee employee : employees) {
+            // NOTE : J'utilise ici les getters par convention (getNom(), getPrenom(), etc.)
+            table.addCell(new Phrase(employee.getNom(), fontData));
+            table.addCell(new Phrase(employee.getPrenom(), fontData));
+            table.addCell(new Phrase(employee.getEmail(), fontData));
+            table.addCell(new Phrase(employee.getTelephone(), fontData));
+            table.addCell(new Phrase(employee.getPoste(), fontData));
+            table.addCell(new Phrase(employee.getGrade(), fontData));
+        }
+
+        document.add(table);
+        document.close();
+
+        // 3. Préparation du ResponseEntity
+        byte[] pdfBytes = bos.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        // Indique que le contenu est un PDF
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        // Force le navigateur à télécharger le fichier avec un nom spécifique
+        String filename = "rapport_employes_" + LocalDate.now() + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        // Indique la taille du fichier
+        headers.setContentLength(pdfBytes.length);
+
+        // Renvoie les bytes du PDF avec les en-têtes HTTP appropriés
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
 }

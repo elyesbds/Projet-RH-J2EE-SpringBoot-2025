@@ -14,6 +14,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
 
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfWriter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+
 @Controller
 @RequestMapping("/departements")
 public class DepartementController {
@@ -145,5 +158,91 @@ public class DepartementController {
         departementRepository.delete(departement.get());
         redirectAttributes.addFlashAttribute("successMessage", "Département supprimé avec succès");
         return "redirect:/departements";
+    }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportDepartementsToPDF() throws IOException {
+
+        // 1. Récupération des données
+        List<Departement> departements = departementRepository.findAll();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+
+        // Initialisation du writer dans un bloc try-catch
+        try {
+            PdfWriter.getInstance(document, bos);
+            document.open();
+
+            // --- Titre du Document ---
+            Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontTitre.setSize(20);
+            Paragraph pTitre = new Paragraph("Rapport: Liste des Départements au " + LocalDate.now(), fontTitre);
+            pTitre.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(pTitre);
+            document.add(new Paragraph(" "));
+
+            // --- Tableau des Départements ---
+
+            // 3 colonnes : ID, Intitulé, Chef de Département
+            PdfPTable table = new PdfPTable(3);
+            table.setWidthPercentage(80);
+            table.setWidths(new float[] {1f, 3f, 3f});
+            table.setSpacingBefore(10);
+
+            // Entêtes du Tableau
+            Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontHeader.setSize(12);
+            String[] tableHeaders = {"ID", "Intitulé", "Chef de Département"};
+
+            for (String header : tableHeaders) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, fontHeader));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(new Color(153, 204, 255)); // Bleu clair pour le département
+                cell.setPadding(5);
+                table.addCell(cell);
+            }
+
+            // Remplissage des Données
+            Font fontData = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            for (Departement dept : departements) {
+                // Ligne 1: ID
+                table.addCell(new Phrase(dept.getId().toString(), fontData));
+
+                // Ligne 2: Intitulé
+                table.addCell(new Phrase(dept.getIntitule(), fontData));
+
+                // Ligne 3: Chef de Département
+                String chefName;
+                if (dept.getChefDepartement() != null) {
+                    // Recherche du nom complet de l'employé (Chef)
+                    Optional<Employee> chefOpt = employeeRepository.findById(dept.getChefDepartement().longValue());
+                    chefName = chefOpt.map(e -> e.getPrenom() + " " + e.getNom()).orElse("Non assigné");
+                } else {
+                    chefName = "Non assigné";
+                }
+                table.addCell(new Phrase(chefName, fontData));
+            }
+
+            document.add(table);
+            document.close();
+
+        } catch (DocumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 2. Préparation du ResponseEntity
+        byte[] pdfBytes = bos.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String filename = "rapport_departements_" + LocalDate.now() + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }

@@ -41,8 +41,10 @@
 
     <div class="header-actions">
         <!-- Bouton visible uniquement pour ADMIN et CHEF_PROJET -->
-        <a th:href="@{/projets/add}" class="btn"
-           sec:authorize="hasAnyRole('ADMIN', 'CHEF_PROJET')">➕ Ajouter un projet</a>
+        <a th:href="@{/projets/add}" class="btn" sec:authorize="hasAnyRole('ADMIN', 'CHEF_PROJET')">➕ Ajouter un projet</a>
+        <a th:href="@{/projets/export/pdf}" class="btn btn-secondary">
+            ⬇️ Exporter en PDF
+        </a>
     </div>
 
     <!-- Section Recherche et Filtres -->

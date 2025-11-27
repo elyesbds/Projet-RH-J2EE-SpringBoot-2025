@@ -53,6 +53,11 @@
                    autocomplete="off">
         </div>
         <div id="filterContainer"></div>
+        <div style="margin-bottom: 20px; text-align: right;">
+            <a th:href="@{/employees/export/pdf}" class="btn btn-secondary">
+                ⬇️ Exporter la liste en PDF
+            </a>
+        </div>
     </div>
 
     <div th:if="${employees != null and !employees.isEmpty()}">

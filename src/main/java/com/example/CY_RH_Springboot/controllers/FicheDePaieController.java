@@ -17,6 +17,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfWriter;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.Locale;
+import java.time.Month;
+
 @Controller
 @RequestMapping("/fiches-paie")
 public class FicheDePaieController {
@@ -215,5 +232,184 @@ public class FicheDePaieController {
         ficheDePaieRepository.delete(fichePaie.get());
         redirectAttributes.addFlashAttribute("successMessage", "Fiche de paie supprimée avec succès");
         return "redirect:/fiches-paie";
+    }
+
+    @GetMapping("/export/{id}/pdf")
+    public ResponseEntity<byte[]> exportFicheDePaieToPDF(@PathVariable Integer id) throws IOException {
+
+        // 1. Récupération des données
+        Optional<FicheDePaie> fichePaieOpt = ficheDePaieRepository.findById(id);
+        if (fichePaieOpt.isEmpty()) {
+            // Fiche de paie non trouvée, renvoie une erreur 404
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        FicheDePaie fichePaie = fichePaieOpt.get();
+
+        // Récupération de l'employé associé
+        Optional<Employee> employeeOpt = employeeRepository.findById(fichePaie.getIdEmployer());
+        Employee employee = employeeOpt.orElse(null);
+
+        // Déclaration de 'periode' déplacée ici (CORRECTION DE LA PORTÉE)
+        String nomMois = Month.of(fichePaie.getMois()).getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, Locale.FRANCE);
+        final String periode = nomMois.toUpperCase() + " " + fichePaie.getAnnee();
+
+        // Outil de formatage monétaire (ex: 1 234.56 €)
+        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00 €", new java.text.DecimalFormatSymbols(Locale.FRANCE));
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+
+        try {
+            PdfWriter.getInstance(document, bos);
+            document.open();
+
+            // --- Titre et Informations d'Entête ---
+
+            // TITRE PRINCIPAL
+            Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontTitre.setSize(22);
+            fontTitre.setColor(new Color(60, 60, 160)); // Bleu foncé
+            Paragraph pTitre = new Paragraph("FICHE DE PAIE", fontTitre);
+            pTitre.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(pTitre);
+
+            // Période concernée (utilise la variable 'periode' déclarée au-dessus)
+            Font fontPeriode = FontFactory.getFont(FontFactory.HELVETICA);
+            fontPeriode.setSize(14);
+            Paragraph pPeriode = new Paragraph("Période : " + periode, fontPeriode);
+            pPeriode.setAlignment(Paragraph.ALIGN_CENTER);
+            pPeriode.setSpacingAfter(20);
+            document.add(pPeriode);
+
+
+            // --- BLOC INFORMATION EMPLOYE / EMPLOYEUR ---
+
+            // Table pour diviser l'espace : 2 colonnes, 50% chacune
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setWidths(new float[]{50, 50});
+            infoTable.setSpacingAfter(20);
+
+            // Colonne Gauche (Employeur - Simplifié)
+            PdfPCell employeurCell = new PdfPCell();
+            employeurCell.setBorder(Rectangle.BOX);
+            employeurCell.setBorderWidth(1.5f);
+            employeurCell.setBackgroundColor(new Color(230, 230, 255)); // Bleu clair
+            employeurCell.setPadding(10);
+            employeurCell.addElement(new Paragraph("Employeur : CY-RH Project", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+            employeurCell.addElement(new Paragraph("123 Rue de l'Exemple, 75000 Paris", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            infoTable.addCell(employeurCell);
+
+            // Colonne Droite (Employé)
+            PdfPCell employeCell = new PdfPCell();
+            employeCell.setBorder(Rectangle.BOX);
+            employeCell.setBorderWidth(1.5f);
+            employeCell.setPadding(10);
+
+            if (employee != null) {
+                employeCell.addElement(new Paragraph("Employé : " + employee.getPrenom() + " " + employee.getNom().toUpperCase(), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+                employeCell.addElement(new Paragraph("Poste : " + employee.getPoste(), FontFactory.getFont(FontFactory.HELVETICA, 10)));
+                // ATTENTION : J'utilise getMatricule(), assurez-vous que cette méthode existe dans Employee.java
+                employeCell.addElement(new Paragraph("Matricule : " + employee.getMatricule(), FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            } else {
+                employeCell.addElement(new Paragraph("Employé : Données non disponibles (ID: " + fichePaie.getIdEmployer() + ")", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+            }
+            infoTable.addCell(employeCell);
+
+            document.add(infoTable);
+
+
+            // --- TABLEAU DES ÉLÉMENTS DE PAIE ---
+
+            document.add(new Paragraph("Détails des Éléments de Paie :", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph(" "));
+
+            // Tableau de 3 colonnes : Intitulé, Montant, Type
+            PdfPTable paieTable = new PdfPTable(3);
+            paieTable.setWidthPercentage(100);
+            paieTable.setWidths(new float[]{5, 2, 3});
+
+            // Entêtes
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            headerFont.setColor(Color.WHITE);
+            Color headerColor = new Color(70, 70, 70); // Gris foncé
+
+            String[] paieHeaders = {"Intitulé", "Montant", "Type"};
+            for (String header : paieHeaders) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(headerColor);
+                cell.setPadding(5);
+                paieTable.addCell(cell);
+            }
+
+            // Ligne Salaire de Base
+            Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            paieTable.addCell(new Phrase("Salaire de Base", dataFont));
+            paieTable.addCell(new Phrase(currencyFormat.format(fichePaie.getSalaireBase()), dataFont));
+            paieTable.addCell(new Phrase("Gain", dataFont));
+
+            // Ligne Primes
+            paieTable.addCell(new Phrase("Primes (Exceptionnel ou Objectifs)", dataFont));
+            paieTable.addCell(new Phrase(currencyFormat.format(fichePaie.getPrimes()), dataFont));
+            paieTable.addCell(new Phrase("Gain", dataFont));
+
+            // Ligne Déductions
+            paieTable.addCell(new Phrase("Cotisations / Taxes (Simplifié)", dataFont));
+            paieTable.addCell(new Phrase("-" + currencyFormat.format(fichePaie.getDeductions()), dataFont));
+            paieTable.addCell(new Phrase("Retenue", dataFont));
+
+            document.add(paieTable);
+
+
+            // --- RÉCAPITULATIF (NET À PAYER) ---
+
+            document.add(new Paragraph(" "));
+
+            PdfPTable netTable = new PdfPTable(2);
+            netTable.setWidthPercentage(100);
+            netTable.setWidths(new float[]{7, 3});
+            netTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+            // Cellule vide pour aligner à droite le net à payer
+            PdfPCell emptyCell = new PdfPCell(new Phrase(" ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+            emptyCell.setBorder(Rectangle.NO_BORDER);
+            netTable.addCell(emptyCell);
+
+            // Cellule Net à Payer
+            PdfPCell netCell = new PdfPCell(new Phrase("NET À PAYER : " + currencyFormat.format(fichePaie.getNetAPayer()), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+            netCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            netCell.setBackgroundColor(new Color(180, 255, 180)); // Vert clair
+            netCell.setPadding(8);
+            netTable.addCell(netCell);
+
+            document.add(netTable);
+
+            // --- Date de génération
+            Paragraph pGenerated = new Paragraph("Fiche générée automatiquement le : " + LocalDate.now(), FontFactory.getFont(FontFactory.HELVETICA, 8));
+            pGenerated.setAlignment(Paragraph.ALIGN_RIGHT);
+            pGenerated.setSpacingBefore(10);
+            document.add(pGenerated);
+
+            document.close();
+
+        } catch (DocumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 3. Préparation du ResponseEntity
+        byte[] pdfBytes = bos.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        // 'periode' est reconnu ici.
+        String filename = "fiche_paie_" + periode.replace(" ", "_") + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }
