@@ -15,10 +15,10 @@
     <!-- Bouton de connexion/déconnexion en haut à droite -->
     <div class="header-auth">
         <div sec:authorize="isAuthenticated()">
-                <span class="auth-status">
-                    👤 <span sec:authentication="name"></span>
-                </span>
-            <form th:action="@{/logout}" method="post" style="display: inline;">
+            <span class="auth-status">
+                👤 <span sec:authentication="name"></span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
                 <button type="submit" class="btn btn-logout">🚪 Déconnexion</button>
             </form>
         </div>
@@ -26,6 +26,7 @@
             <a th:href="@{/login}" class="btn btn-login">🔐 Se connecter</a>
         </div>
     </div>
+
     <!-- Message de bienvenue par défaut (affiché uniquement si aucune section n'est active) -->
     <div th:if="${showEmployees == null or (!showEmployees and !showDashboard and !showStatistics and !showDepartements and !showProjets and !showFichesPaie)}" class="welcome-message">
         <h1>🏢 Bienvenue dans le système de gestion RH</h1>
@@ -44,8 +45,19 @@
             </a>
         </div>
 
+        <!-- Section Recherche et Filtres pour les employés -->
+        <div th:if="${employees != null && !employees.isEmpty()}" class="search-filter-section">
+            <div class="search-box">
+                <input type="text"
+                       id="searchInputEmployees"
+                       placeholder="🔍 Rechercher un employé (nom, prénom, email, poste, matricule...)"
+                       autocomplete="off">
+            </div>
+            <div id="filterContainerEmployees"></div>
+        </div>
+
         <div th:if="${employees != null && !employees.isEmpty()}">
-            <table>
+            <table id="employeesTableHome">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -82,7 +94,7 @@
         </div>
 
         <div th:if="${employees == null || employees.isEmpty()}" class="dashboard-card">
-            <p style="text-align: center; color: #666;">Aucun employé trouvé dans la base de données.</p>
+            <p class="text-center">Aucun employé trouvé dans la base de données.</p>
         </div>
     </div>
 
@@ -181,8 +193,8 @@
                         <td th:text="${entry.key}"></td>
                         <td th:text="${entry.value}"></td>
                         <td>
-                                    <span class="badge badge-info"
-                                          th:text="${#numbers.formatDecimal(entry.value * 100.0 / totalEmployees, 1, 1) + '%'}"></span>
+                            <span class="badge badge-info"
+                                  th:text="${#numbers.formatDecimal(entry.value * 100.0 / totalEmployees, 1, 1) + '%'}"></span>
                         </td>
                     </tr>
                     </tbody>
@@ -205,9 +217,9 @@
                     <tbody>
                     <tr th:each="entry : ${projetsPerEtat}">
                         <td>
-                            <span th:if="${entry.key == 'EN_COURS'}" style="color: #4CAF50; font-weight: bold;">⏳ EN COURS</span>
-                            <span th:if="${entry.key == 'TERMINE'}" style="color: #2196F3; font-weight: bold;">✅ TERMINÉ</span>
-                            <span th:if="${entry.key == 'ANNULE'}" style="color: #f44336; font-weight: bold;">❌ ANNULÉ</span>
+                            <span th:if="${entry.key == 'EN_COURS'}" class="badge-success">⏳ EN COURS</span>
+                            <span th:if="${entry.key == 'TERMINE'}" class="badge-info">✅ TERMINÉ</span>
+                            <span th:if="${entry.key == 'ANNULE'}" class="badge-danger">❌ ANNULÉ</span>
                         </td>
                         <td th:text="${entry.value}"></td>
                         <td>
@@ -264,8 +276,19 @@
             </a>
         </div>
 
+        <!-- Section Recherche et Filtres pour les départements -->
+        <div th:if="${departements != null && !departements.isEmpty()}" class="search-filter-section">
+            <div class="search-box">
+                <input type="text"
+                       id="searchInputDepartements"
+                       placeholder="🔍 Rechercher un département (intitulé, chef...)"
+                       autocomplete="off">
+            </div>
+            <div id="filterContainerDepartements"></div>
+        </div>
+
         <div th:if="${departements != null && !departements.isEmpty()}">
-            <table>
+            <table id="departementsTableHome">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -284,7 +307,7 @@
         </div>
 
         <div th:if="${departements == null || departements.isEmpty()}" class="dashboard-card">
-            <p style="text-align: center; color: #666;">Aucun département trouvé dans la base de données.</p>
+            <p class="text-center">Aucun département trouvé dans la base de données.</p>
         </div>
     </div>
 
@@ -300,8 +323,19 @@
             </a>
         </div>
 
+        <!-- Section Recherche et Filtres pour les projets -->
+        <div th:if="${projets != null && !projets.isEmpty()}" class="search-filter-section">
+            <div class="search-box">
+                <input type="text"
+                       id="searchInputProjets"
+                       placeholder="🔍 Rechercher un projet (nom, chef, département...)"
+                       autocomplete="off">
+            </div>
+            <div id="filterContainerProjets"></div>
+        </div>
+
         <div th:if="${projets != null && !projets.isEmpty()}">
-            <table>
+            <table id="projetsTableHome">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -321,21 +355,21 @@
                     <td th:text="${projet.dateDebut}"></td>
                     <td th:text="${projet.dateFinPrevue}"></td>
                     <td>
-                                <span th:if="${projet.chefProjet != null}">
-                                    <span th:each="emp : ${employees}">
-                                        <span th:if="${emp.id == projet.chefProjet}"
-                                              th:text="${emp.prenom + ' ' + emp.nom}"></span>
-                                    </span>
-                                </span>
+                        <span th:if="${projet.chefProjet != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == projet.chefProjet}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
                         <span th:if="${projet.chefProjet == null}">-</span>
                     </td>
                     <td>
-                                <span th:if="${projet.idDepartement != null}">
-                                    <span th:each="dept : ${departements}">
-                                        <span th:if="${dept.id == projet.idDepartement}"
-                                              th:text="${dept.intitule}"></span>
-                                    </span>
-                                </span>
+                        <span th:if="${projet.idDepartement != null}">
+                            <span th:each="dept : ${departements}">
+                                <span th:if="${dept.id == projet.idDepartement}"
+                                      th:text="${dept.intitule}"></span>
+                            </span>
+                        </span>
                         <span th:if="${projet.idDepartement == null}">-</span>
                     </td>
                 </tr>
@@ -344,7 +378,7 @@
         </div>
 
         <div th:if="${projets == null || projets.isEmpty()}" class="dashboard-card">
-            <p style="text-align: center; color: #666;">Aucun projet trouvé dans la base de données.</p>
+            <p class="text-center">Aucun projet trouvé dans la base de données.</p>
         </div>
     </div>
 
@@ -360,8 +394,19 @@
             </a>
         </div>
 
+        <!-- Section Recherche et Filtres pour les fiches de paie -->
+        <div th:if="${fichesPaie != null && !fichesPaie.isEmpty()}" class="search-filter-section">
+            <div class="search-box">
+                <input type="text"
+                       id="searchInputFichesPaie"
+                       placeholder="🔍 Rechercher une fiche de paie (employé, mois, année...)"
+                       autocomplete="off">
+            </div>
+            <div id="filterContainerFichesPaie"></div>
+        </div>
+
         <div th:if="${fichesPaie != null && !fichesPaie.isEmpty()}">
-            <table>
+            <table id="fichesPaieTableHome">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -378,19 +423,19 @@
                 <tr th:each="fiche : ${fichesPaie}">
                     <td th:text="${fiche.id}"></td>
                     <td>
-                                <span th:if="${fiche.idEmployer != null}">
-                                    <span th:each="emp : ${employees}">
-                                        <span th:if="${emp.id == fiche.idEmployer}"
-                                              th:text="${emp.prenom + ' ' + emp.nom}"></span>
-                                    </span>
-                                </span>
+                        <span th:if="${fiche.idEmployer != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == fiche.idEmployer}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
                         <span th:if="${fiche.idEmployer == null}">-</span>
                     </td>
                     <td th:text="${fiche.mois + '/' + fiche.annee}"></td>
                     <td th:text="${fiche.salaireBase + ' €'}"></td>
                     <td th:text="${fiche.primes + ' €'}"></td>
                     <td th:text="${fiche.deductions + ' €'}"></td>
-                    <td style="font-weight: bold; color: #4CAF50;" th:text="${fiche.netAPayer + ' €'}"></td>
+                    <td class="highlight-amount" th:text="${fiche.netAPayer + ' €'}"></td>
                     <td th:text="${fiche.dateGeneration}"></td>
                 </tr>
                 </tbody>
@@ -398,9 +443,51 @@
         </div>
 
         <div th:if="${fichesPaie == null || fichesPaie.isEmpty()}" class="dashboard-card">
-            <p style="text-align: center; color: #666;">Aucune fiche de paie trouvée dans la base de données.</p>
+            <p class="text-center">Aucune fiche de paie trouvée dans la base de données.</p>
         </div>
     </div>
 </div>
+
+<!-- JavaScript -->
+<script th:src="@{/js/search-filters.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les filtres pour la section Employés
+        const tableEmployees = document.getElementById('employeesTableHome');
+        const searchInputEmployees = document.getElementById('searchInputEmployees');
+        const filterContainerEmployees = document.getElementById('filterContainerEmployees');
+
+        if (tableEmployees && searchInputEmployees && filterContainerEmployees) {
+            initTableSearchFilter('employeesTableHome', 'searchInputEmployees', 'filterContainerEmployees');
+        }
+
+        // Initialiser les filtres pour la section Départements
+        const tableDepartements = document.getElementById('departementsTableHome');
+        const searchInputDepartements = document.getElementById('searchInputDepartements');
+        const filterContainerDepartements = document.getElementById('filterContainerDepartements');
+
+        if (tableDepartements && searchInputDepartements && filterContainerDepartements) {
+            initTableSearchFilter('departementsTableHome', 'searchInputDepartements', 'filterContainerDepartements');
+        }
+
+        // Initialiser les filtres pour la section Projets
+        const tableProjets = document.getElementById('projetsTableHome');
+        const searchInputProjets = document.getElementById('searchInputProjets');
+        const filterContainerProjets = document.getElementById('filterContainerProjets');
+
+        if (tableProjets && searchInputProjets && filterContainerProjets) {
+            initTableSearchFilter('projetsTableHome', 'searchInputProjets', 'filterContainerProjets');
+        }
+
+        // Initialiser les filtres pour la section Fiches de paie
+        const tableFichesPaie = document.getElementById('fichesPaieTableHome');
+        const searchInputFichesPaie = document.getElementById('searchInputFichesPaie');
+        const filterContainerFichesPaie = document.getElementById('filterContainerFichesPaie');
+
+        if (tableFichesPaie && searchInputFichesPaie && filterContainerFichesPaie) {
+            initTableSearchFilter('fichesPaieTableHome', 'searchInputFichesPaie', 'filterContainerFichesPaie');
+        }
+    });
+</script>
 </body>
 </html>
