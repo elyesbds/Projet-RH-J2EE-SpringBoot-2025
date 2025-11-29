@@ -766,6 +766,21 @@ textarea:focus {
     border: 1px solid #f5c6cb;
 }
 
+.alert-info {
+    background-color: #e3f2fd;
+    border: 1px solid #2196F3;
+    color: #0d47a1;
+}
+
+.alert-info ul {
+    margin: 10px 0 0 20px;
+    padding-left: 0;
+}
+
+.alert-info li {
+    margin-bottom: 5px;
+}
+
 .error-message {
     color: #f5576c;
     font-size: 0.85em;
@@ -777,6 +792,25 @@ input.error,
 select.error,
 textarea.error {
     border-color: #f5576c;
+}
+
+.field-hint {
+    display: block;
+    color: #999;
+    font-size: 0.85em;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.project-name {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.highlight-project {
+    color: #4CAF50;
+    font-weight: bold;
 }
 
 /* ========== RESPONSIVE ========== */
