@@ -44,36 +44,41 @@ public class FicheDePaieController {
     private final EmployeeRepository employeeRepository;
 
     public FicheDePaieController(FicheDePaieRepository ficheDePaieRepository,
-                                 EmployeeRepository employeeRepository) {
+            EmployeeRepository employeeRepository) {
         this.ficheDePaieRepository = ficheDePaieRepository;
         this.employeeRepository = employeeRepository;
     }
 
     // Vérifier si l'utilisateur est admin
     private boolean isAdmin(Authentication auth) {
-        if (auth == null) return false;
+        if (auth == null)
+            return false;
         return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
     }
 
     // Vérifier si l'utilisateur est chef de département
     private boolean isChefDept(Authentication auth) {
-        if (auth == null) return false;
+        if (auth == null)
+            return false;
         return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CHEF_DEPT"));
     }
 
     // Vérifier si l'utilisateur peut modifier une fiche de paie
     private boolean canModifyFichePaie(Authentication auth, FicheDePaie fiche) {
-        if (isAdmin(auth)) return true;
+        if (isAdmin(auth))
+            return true;
 
         String email = auth.getName();
         Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
-        if (currentUser.isEmpty()) return false;
+        if (currentUser.isEmpty())
+            return false;
 
         // Chef de département peut modifier les fiches de son département
         if (isChefDept(auth)) {
             Optional<Employee> ficheEmployee = employeeRepository.findById(fiche.getIdEmployer());
-            if (ficheEmployee.isPresent() && ficheEmployee.get().getIdDepartement() != null && currentUser.get().getIdDepartement() != null) {
+            if (ficheEmployee.isPresent() && ficheEmployee.get().getIdDepartement() != null
+                    && currentUser.get().getIdDepartement() != null) {
                 // Comparer les ID de département
                 Integer chefDeptId = currentUser.get().getIdDepartement();
                 Integer employeeDeptId = ficheEmployee.get().getIdDepartement();
@@ -99,13 +104,13 @@ public class FicheDePaieController {
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
             if (currentUser.isPresent()) {
-                Integer currentUserId = currentUser.get().getId().intValue();
+                Long currentUserId = currentUser.get().getId();
                 Integer deptId = currentUser.get().getIdDepartement();
 
-                List<Integer> employeeIds = employees.stream()
+                List<Long> employeeIds = employees.stream()
                         .filter(e -> {
                             // Inclure le chef lui-même
-                            if (e.getId().intValue() == currentUserId) {
+                            if (e.getId().equals(currentUserId)) {
                                 return true;
                             }
                             // Inclure les employés du département (si le chef a un département)
@@ -114,7 +119,7 @@ public class FicheDePaieController {
                             }
                             return false;
                         })
-                        .map(e -> e.getId().intValue())
+                        .map(e -> e.getId())
                         .collect(Collectors.toList());
 
                 fichesPaie = ficheDePaieRepository.findAll().stream()
@@ -144,7 +149,8 @@ public class FicheDePaieController {
     @GetMapping("/add")
     public String showAddForm(Model model, Authentication auth, RedirectAttributes redirectAttributes) {
         if (!isAdmin(auth) && !isChefDept(auth)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de créer une fiche de paie");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Vous n'avez pas la permission de créer une fiche de paie");
             return "redirect:/fiches-paie";
         }
 
@@ -184,20 +190,21 @@ public class FicheDePaieController {
             BindingResult bindingResult,
             Model model,
             Authentication auth,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
 
         // === Vérification permissions modification ===
         if (fichePaie.getId() != null) {
             Optional<FicheDePaie> existing = ficheDePaieRepository.findById(fichePaie.getId());
             if (existing.isPresent() && !canModifyFichePaie(auth, existing.get())) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de modifier cette fiche de paie");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Vous n'avez pas la permission de modifier cette fiche de paie");
                 return "redirect:/fiches-paie";
             }
         } else {
             // Création
             if (!isAdmin(auth) && !isChefDept(auth)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de créer une fiche de paie");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Vous n'avez pas la permission de créer une fiche de paie");
                 return "redirect:/fiches-paie";
             }
         }
@@ -250,7 +257,8 @@ public class FicheDePaieController {
 
     // Affiche le formulaire pour modifier une fiche de paie
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Integer id, Model model, Authentication auth, RedirectAttributes redirectAttributes) {
+    public String showEditForm(@PathVariable Integer id, Model model, Authentication auth,
+            RedirectAttributes redirectAttributes) {
         Optional<FicheDePaie> fichePaie = ficheDePaieRepository.findById(id);
 
         if (fichePaie.isEmpty()) {
@@ -259,7 +267,8 @@ public class FicheDePaieController {
         }
 
         if (!canModifyFichePaie(auth, fichePaie.get())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de modifier cette fiche de paie");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Vous n'avez pas la permission de modifier cette fiche de paie");
             return "redirect:/fiches-paie";
         }
 
@@ -272,7 +281,8 @@ public class FicheDePaieController {
 
     // Supprimer une fiche de paie
     @GetMapping("/delete/{id}")
-    public String deleteFichePaie(@PathVariable Integer id, Authentication auth, RedirectAttributes redirectAttributes) {
+    public String deleteFichePaie(@PathVariable Integer id, Authentication auth,
+            RedirectAttributes redirectAttributes) {
         Optional<FicheDePaie> fichePaie = ficheDePaieRepository.findById(id);
 
         if (fichePaie.isEmpty()) {
@@ -281,7 +291,8 @@ public class FicheDePaieController {
         }
 
         if (!canModifyFichePaie(auth, fichePaie.get())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de supprimer cette fiche de paie");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Vous n'avez pas la permission de supprimer cette fiche de paie");
             return "redirect:/fiches-paie";
         }
 
@@ -306,11 +317,13 @@ public class FicheDePaieController {
         Employee employee = employeeOpt.orElse(null);
 
         // Déclaration de 'periode' déplacée ici (CORRECTION DE LA PORTÉE)
-        String nomMois = Month.of(fichePaie.getMois()).getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, Locale.FRANCE);
+        String nomMois = Month.of(fichePaie.getMois()).getDisplayName(java.time.format.TextStyle.FULL_STANDALONE,
+                Locale.FRANCE);
         final String periode = nomMois.toUpperCase() + " " + fichePaie.getAnnee();
 
         // Outil de formatage monétaire (ex: 1 234.56 €)
-        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00 €", new java.text.DecimalFormatSymbols(Locale.FRANCE));
+        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00 €",
+                new java.text.DecimalFormatSymbols(Locale.FRANCE));
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
@@ -337,13 +350,12 @@ public class FicheDePaieController {
             pPeriode.setSpacingAfter(20);
             document.add(pPeriode);
 
-
             // --- BLOC INFORMATION EMPLOYE / EMPLOYEUR ---
 
             // Table pour diviser l'espace : 2 colonnes, 50% chacune
             PdfPTable infoTable = new PdfPTable(2);
             infoTable.setWidthPercentage(100);
-            infoTable.setWidths(new float[]{50, 50});
+            infoTable.setWidths(new float[] { 50, 50 });
             infoTable.setSpacingAfter(20);
 
             // Colonne Gauche (Employeur - Simplifié)
@@ -352,8 +364,10 @@ public class FicheDePaieController {
             employeurCell.setBorderWidth(1.5f);
             employeurCell.setBackgroundColor(new Color(230, 230, 255)); // Bleu clair
             employeurCell.setPadding(10);
-            employeurCell.addElement(new Paragraph("Employeur : CY-RH Project", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
-            employeurCell.addElement(new Paragraph("123 Rue de l'Exemple, 75000 Paris", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            employeurCell.addElement(
+                    new Paragraph("Employeur : CY-RH Project", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+            employeurCell.addElement(
+                    new Paragraph("123 Rue de l'Exemple, 75000 Paris", FontFactory.getFont(FontFactory.HELVETICA, 10)));
             infoTable.addCell(employeurCell);
 
             // Colonne Droite (Employé)
@@ -363,34 +377,41 @@ public class FicheDePaieController {
             employeCell.setPadding(10);
 
             if (employee != null) {
-                employeCell.addElement(new Paragraph("Employé : " + employee.getPrenom() + " " + employee.getNom().toUpperCase(), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
-                employeCell.addElement(new Paragraph("Poste : " + employee.getPoste(), FontFactory.getFont(FontFactory.HELVETICA, 10)));
-                // ATTENTION : J'utilise getMatricule(), assurez-vous que cette méthode existe dans Employee.java
-                employeCell.addElement(new Paragraph("Matricule : " + employee.getMatricule(), FontFactory.getFont(FontFactory.HELVETICA, 10)));
+                employeCell.addElement(
+                        new Paragraph("Employé : " + employee.getPrenom() + " " + employee.getNom().toUpperCase(),
+                                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+                employeCell.addElement(new Paragraph("Poste : " + employee.getPoste(),
+                        FontFactory.getFont(FontFactory.HELVETICA, 10)));
+                // ATTENTION : J'utilise getMatricule(), assurez-vous que cette méthode existe
+                // dans Employee.java
+                employeCell.addElement(new Paragraph("Matricule : " + employee.getMatricule(),
+                        FontFactory.getFont(FontFactory.HELVETICA, 10)));
             } else {
-                employeCell.addElement(new Paragraph("Employé : Données non disponibles (ID: " + fichePaie.getIdEmployer() + ")", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+                employeCell.addElement(
+                        new Paragraph("Employé : Données non disponibles (ID: " + fichePaie.getIdEmployer() + ")",
+                                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
             }
             infoTable.addCell(employeCell);
 
             document.add(infoTable);
 
-
             // --- TABLEAU DES ÉLÉMENTS DE PAIE ---
 
-            document.add(new Paragraph("Détails des Éléments de Paie :", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph("Détails des Éléments de Paie :",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
             document.add(new Paragraph(" "));
 
             // Tableau de 3 colonnes : Intitulé, Montant, Type
             PdfPTable paieTable = new PdfPTable(3);
             paieTable.setWidthPercentage(100);
-            paieTable.setWidths(new float[]{5, 2, 3});
+            paieTable.setWidths(new float[] { 5, 2, 3 });
 
             // Entêtes
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
             headerFont.setColor(Color.WHITE);
             Color headerColor = new Color(70, 70, 70); // Gris foncé
 
-            String[] paieHeaders = {"Intitulé", "Montant", "Type"};
+            String[] paieHeaders = { "Intitulé", "Montant", "Type" };
             for (String header : paieHeaders) {
                 PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
                 cell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -417,14 +438,13 @@ public class FicheDePaieController {
 
             document.add(paieTable);
 
-
             // --- RÉCAPITULATIF (NET À PAYER) ---
 
             document.add(new Paragraph(" "));
 
             PdfPTable netTable = new PdfPTable(2);
             netTable.setWidthPercentage(100);
-            netTable.setWidths(new float[]{7, 3});
+            netTable.setWidths(new float[] { 7, 3 });
             netTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
 
             // Cellule vide pour aligner à droite le net à payer
@@ -433,7 +453,9 @@ public class FicheDePaieController {
             netTable.addCell(emptyCell);
 
             // Cellule Net à Payer
-            PdfPCell netCell = new PdfPCell(new Phrase("NET À PAYER : " + currencyFormat.format(fichePaie.getNetAPayer()), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+            PdfPCell netCell = new PdfPCell(
+                    new Phrase("NET À PAYER : " + currencyFormat.format(fichePaie.getNetAPayer()),
+                            FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
             netCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             netCell.setBackgroundColor(new Color(180, 255, 180)); // Vert clair
             netCell.setPadding(8);
@@ -442,7 +464,8 @@ public class FicheDePaieController {
             document.add(netTable);
 
             // --- Date de génération
-            Paragraph pGenerated = new Paragraph("Fiche générée automatiquement le : " + LocalDate.now(), FontFactory.getFont(FontFactory.HELVETICA, 8));
+            Paragraph pGenerated = new Paragraph("Fiche générée automatiquement le : " + LocalDate.now(),
+                    FontFactory.getFont(FontFactory.HELVETICA, 8));
             pGenerated.setAlignment(Paragraph.ALIGN_RIGHT);
             pGenerated.setSpacingBefore(10);
             document.add(pGenerated);

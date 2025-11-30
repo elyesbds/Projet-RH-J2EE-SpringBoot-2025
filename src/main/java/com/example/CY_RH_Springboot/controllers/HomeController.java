@@ -31,10 +31,10 @@ public class HomeController {
     private final AffectationProjetRepository affectationRepository;
 
     public HomeController(EmployeeRepository employeeRepository,
-                          DepartementRepository departementRepository,
-                          ProjetRepository projetRepository,
-                          FicheDePaieRepository ficheDePaieRepository,
-                          AffectationProjetRepository affectationRepository) {
+            DepartementRepository departementRepository,
+            ProjetRepository projetRepository,
+            FicheDePaieRepository ficheDePaieRepository,
+            AffectationProjetRepository affectationRepository) {
         this.employeeRepository = employeeRepository;
         this.departementRepository = departementRepository;
         this.projetRepository = projetRepository;
@@ -44,12 +44,14 @@ public class HomeController {
 
     // Méthodes helper pour vérifier les rôles
     private boolean isAdmin(Authentication auth) {
-        if (auth == null) return false;
+        if (auth == null)
+            return false;
         return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
     }
 
     private boolean isChefDept(Authentication auth) {
-        if (auth == null) return false;
+        if (auth == null)
+            return false;
         return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CHEF_DEPT"));
     }
 
@@ -135,15 +137,27 @@ public class HomeController {
             // Admin voit toutes les fiches
             fichesPaie = ficheDePaieRepository.findAll();
         } else if (isChefDept) {
-            // Chef de département voit les fiches de son département
+            // Chef de département voit les fiches de son département ET ses propres fiches
             String email = auth.getName();
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
-            if (currentUser.isPresent() && currentUser.get().getIdDepartement() != null) {
+            if (currentUser.isPresent()) {
+                Long currentUserId = currentUser.get().getId();
                 Integer deptId = currentUser.get().getIdDepartement();
-                List<Integer> employeeIds = employees.stream()
-                        .filter(e -> e.getIdDepartement() != null && e.getIdDepartement().equals(deptId))
-                        .map(e -> e.getId().intValue())
+
+                List<Long> employeeIds = employees.stream()
+                        .filter(e -> {
+                            // Inclure le chef lui-même
+                            if (e.getId().equals(currentUserId)) {
+                                return true;
+                            }
+                            // Inclure les employés du département (si le chef a un département)
+                            if (deptId != null && e.getIdDepartement() != null && e.getIdDepartement().equals(deptId)) {
+                                return true;
+                            }
+                            return false;
+                        })
+                        .map(e -> e.getId())
                         .collect(Collectors.toList());
 
                 fichesPaie = ficheDePaieRepository.findAll().stream()
@@ -190,8 +204,7 @@ public class HomeController {
                                 .findFirst()
                                 .map(Departement::getIntitule)
                                 .orElse("Sans département"),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
         // 3. Nombre d'employés par grade
         Map<String, Long> employeesPerGrade = allEmployees.stream()
