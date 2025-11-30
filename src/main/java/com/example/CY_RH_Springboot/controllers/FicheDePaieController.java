@@ -98,17 +98,27 @@ public class FicheDePaieController {
             String email = auth.getName();
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
-            if (currentUser.isPresent() && currentUser.get().getIdDepartement() != null) {
-                Integer deptId = currentUser.get().getIdDepartement();
+            if (currentUser.isPresent()) {
                 Integer currentUserId = currentUser.get().getId().intValue();
+                Integer deptId = currentUser.get().getIdDepartement();
 
                 List<Integer> employeeIds = employees.stream()
-                        .filter(e -> e.getIdDepartement() != null && e.getIdDepartement().equals(deptId))
+                        .filter(e -> {
+                            // Inclure le chef lui-même
+                            if (e.getId().intValue() == currentUserId) {
+                                return true;
+                            }
+                            // Inclure les employés du département (si le chef a un département)
+                            if (deptId != null && e.getIdDepartement() != null && e.getIdDepartement().equals(deptId)) {
+                                return true;
+                            }
+                            return false;
+                        })
                         .map(e -> e.getId().intValue())
                         .collect(Collectors.toList());
 
                 fichesPaie = ficheDePaieRepository.findAll().stream()
-                        .filter(f -> employeeIds.contains(f.getIdEmployer()) || f.getIdEmployer().equals(currentUserId))
+                        .filter(f -> employeeIds.contains(f.getIdEmployer()))
                         .collect(Collectors.toList());
             } else {
                 fichesPaie = List.of();

@@ -210,6 +210,7 @@ public class ProjetController {
         if (projet.getChefProjet() != null) {
             employeeRepository.findById(projet.getChefProjet().longValue()).ifPresent(emp -> {
                 emp.setRole("CHEF_PROJET");
+                emp.setIdDepartement(projet.getIdDepartement());
                 employeeRepository.save(emp);
             });
         }
@@ -255,6 +256,24 @@ public class ProjetController {
         if (!canManageSpecificProject(auth, projet.get())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Vous ne pouvez pas supprimer ce projet");
             return "redirect:/projets";
+        }
+
+        // Rétrograder le chef de projet en EMPLOYE avant de supprimer le projet
+        if (projet.get().getChefProjet() != null) {
+            employeeRepository.findById(projet.get().getChefProjet().longValue()).ifPresent(emp -> {
+                // Vérifier si cet employé est chef d'un seul projet ou de plusieurs
+                long nbProjetsChef = projetRepository.findAll().stream()
+                        .filter(p -> p.getChefProjet() != null &&
+                                p.getChefProjet().equals(emp.getId().intValue()) &&
+                                !p.getId().equals(id)) // Exclure le projet en cours de suppression
+                        .count();
+
+                // Si c'est son seul projet, le rétrograder en EMPLOYE
+                if (nbProjetsChef == 0) {
+                    emp.setRole("EMPLOYE");
+                    employeeRepository.save(emp);
+                }
+            });
         }
 
         projetRepository.delete(projet.get());
