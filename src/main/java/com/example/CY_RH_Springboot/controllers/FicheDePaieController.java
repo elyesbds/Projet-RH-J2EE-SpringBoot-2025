@@ -4,10 +4,12 @@ import com.example.CY_RH_Springboot.models.FicheDePaie;
 import com.example.CY_RH_Springboot.models.Employee;
 import com.example.CY_RH_Springboot.repositories.FicheDePaieRepository;
 import com.example.CY_RH_Springboot.repositories.EmployeeRepository;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -92,19 +94,21 @@ public class FicheDePaieController {
             // Admin voit toutes les fiches
             fichesPaie = ficheDePaieRepository.findAll();
         } else if (isChefDept(auth)) {
-            // Chef de département voit les fiches de son département
+            // Chef de département voit les fiches de son département ET ses propres fiches
             String email = auth.getName();
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
             if (currentUser.isPresent() && currentUser.get().getIdDepartement() != null) {
                 Integer deptId = currentUser.get().getIdDepartement();
+                Integer currentUserId = currentUser.get().getId().intValue();
+
                 List<Integer> employeeIds = employees.stream()
                         .filter(e -> e.getIdDepartement() != null && e.getIdDepartement().equals(deptId))
                         .map(e -> e.getId().intValue())
                         .collect(Collectors.toList());
 
                 fichesPaie = ficheDePaieRepository.findAll().stream()
-                        .filter(f -> employeeIds.contains(f.getIdEmployer()))
+                        .filter(f -> employeeIds.contains(f.getIdEmployer()) || f.getIdEmployer().equals(currentUserId))
                         .collect(Collectors.toList());
             } else {
                 fichesPaie = List.of();
@@ -165,29 +169,71 @@ public class FicheDePaieController {
 
     // Sauvegarde une fiche de paie (ajout ou modification)
     @PostMapping("/save")
-    public String saveFichePaie(@ModelAttribute FicheDePaie fichePaie, Authentication auth, RedirectAttributes redirectAttributes) {
-        // Vérification pour modification
+    public String saveFichePaie(
+            @Valid @ModelAttribute("fichePaie") FicheDePaie fichePaie,
+            BindingResult bindingResult,
+            Model model,
+            Authentication auth,
+            RedirectAttributes redirectAttributes
+    ) {
+
+        // === Vérification permissions modification ===
         if (fichePaie.getId() != null) {
-            Optional<FicheDePaie> existingFiche = ficheDePaieRepository.findById(fichePaie.getId());
-            if (existingFiche.isPresent() && !canModifyFichePaie(auth, existingFiche.get())) {
+            Optional<FicheDePaie> existing = ficheDePaieRepository.findById(fichePaie.getId());
+            if (existing.isPresent() && !canModifyFichePaie(auth, existing.get())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de modifier cette fiche de paie");
                 return "redirect:/fiches-paie";
             }
         } else {
-            // Pour la création
+            // Création
             if (!isAdmin(auth) && !isChefDept(auth)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Vous n'avez pas la permission de créer une fiche de paie");
                 return "redirect:/fiches-paie";
             }
         }
 
-        // Calculer le net à payer automatiquement
-        BigDecimal netAPayer = fichePaie.getSalaireBase()
+        if (fichePaie.getSalaireBase() == null) {
+            bindingResult.rejectValue("salaireBase", "error.salaireBase", "Le salaire de base est obligatoire.");
+        }
+
+        if (fichePaie.getMois() == null) {
+            bindingResult.rejectValue("mois", "error.mois", "Vous devez choisir un mois.");
+        }
+
+        if (fichePaie.getAnnee() == null) {
+            bindingResult.rejectValue("annee", "error.annee", "L'année est obligatoire.");
+        }
+
+        if (fichePaie.getDateGeneration() == null) {
+            bindingResult.rejectValue("dateGeneration", "error.dateGeneration", "Veuillez choisir une date.");
+        }
+
+        if (fichePaie.getPrimes() == null) {
+            fichePaie.setPrimes(BigDecimal.ZERO);
+        }
+
+        if (fichePaie.getDeductions() == null) {
+            fichePaie.setDeductions(BigDecimal.ZERO);
+        }
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("employees", employeeRepository.findAll());
+            return "fiches-paie/fiche_paie_form";
+        }
+
+        BigDecimal net = fichePaie.getSalaireBase()
                 .add(fichePaie.getPrimes())
                 .subtract(fichePaie.getDeductions());
-        fichePaie.setNetAPayer(netAPayer);
 
+        fichePaie.setNetAPayer(net);
+
+        if (fichePaie.getId() == null) {
+            fichePaie.setDateGeneration(LocalDate.now());
+        }
+
+        // === Sauvegarde ===
         ficheDePaieRepository.save(fichePaie);
+
         redirectAttributes.addFlashAttribute("successMessage", "Fiche de paie enregistrée avec succès");
         return "redirect:/fiches-paie";
     }

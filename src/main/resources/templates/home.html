@@ -344,6 +344,7 @@
                     <th>Date fin prévue</th>
                     <th>Chef de projet</th>
                     <th>Département</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -371,6 +372,12 @@
                         </span>
                         <span th:if="${projet.idDepartement == null}">-</span>
                     </td>
+                    <td class="actions">
+                        <a th:href="@{/affectations/projet/{id}(id=${projet.id})}"
+                           class="btn btn-small btn-primary"
+                           sec:authorize="isAuthenticated()">
+                            👥 Affectations</a>
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -387,7 +394,7 @@
             <h2>💰 Liste des fiches de paie</h2>
         </div>
 
-        <div class="header-actions" sec:authorize="hasAnyRole('ADMIN', 'CHEF_DEPT')">
+        <div class="header-actions" sec:authorize="hasAnyRole('ADMIN')">
             <a th:href="@{/fiches-paie}" class="btn btn-primary">
                 ✏️ Gérer les fiches de paie (Ajouter/Modifier/Supprimer)
             </a>

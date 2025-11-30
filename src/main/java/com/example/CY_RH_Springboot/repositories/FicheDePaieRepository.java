@@ -10,4 +10,6 @@ import java.util.List;
 public interface FicheDePaieRepository extends JpaRepository<FicheDePaie, Integer> {
     List<FicheDePaie> findByIdEmployer(Integer idEmployer);
     void deleteByIdEmployer(Long idEmployer);
+    boolean existsByIdEmployerAndMoisAndAnnee(Long idEmployer, Integer mois, Integer annee);
+
 }

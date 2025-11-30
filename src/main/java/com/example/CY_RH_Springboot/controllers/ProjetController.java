@@ -86,15 +86,16 @@ public class ProjetController {
     // === LISTE (AVEC FILTRE PAR EMPLOYÉ) ===
     @GetMapping
     public String listProjets(Model model, Authentication auth) {
+
         List<Projet> projets;
         List<Employee> employees = employeeRepository.findAll();
         List<Departement> departements = departementRepository.findAll();
 
-        // ADMIN et CHEF_DEPT voient tous les projets
-        if (isAdmin(auth) || isChefDept(auth)) {
+        // Seul ADMIN voit tous les projets
+        if (isAdmin(auth)) {
             projets = projetRepository.findAll();
         } else {
-            // Les autres employés voient uniquement leurs projets
+            // Tous les autres employés ne voient que leurs projets affectés
             String email = auth.getName();
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 

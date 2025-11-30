@@ -25,6 +25,7 @@ public class FicheDePaie {
 
     @NotNull(message = "L'année est obligatoire")
     @Min(value = 2020, message = "L'année doit être au minimum 2020")
+    @Max(value = 2100, message = "L'année est trop élevée")
     @Column(name = "Annee", nullable = false)
     private Integer annee;
 

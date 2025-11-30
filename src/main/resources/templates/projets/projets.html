@@ -40,7 +40,6 @@
     </div>
 
     <div class="header-actions">
-        <!-- Bouton visible uniquement pour ADMIN et CHEF_PROJET -->
         <a th:href="@{/projets/add}" class="btn" sec:authorize="hasAnyRole('ADMIN', 'CHEF_PROJET')">➕ Ajouter un projet</a>
         <a th:href="@{/projets/export/pdf}" class="btn btn-secondary">
             ⬇️ Exporter en PDF
@@ -110,12 +109,6 @@
                     <span th:if="${projet.idDepartement == null}">-</span>
                 </td>
                 <td class="actions">
-                    <!-- Bouton Affectations visible pour tous les connectés -->
-                    <a th:href="@{/affectations/projet/{id}(id=${projet.id})}"
-                       class="btn btn-small btn-primary"
-                       sec:authorize="isAuthenticated()">
-                        👥 Affectations</a>
-
                     <!-- Boutons Modifier/Supprimer visibles uniquement pour ADMIN ou le chef du projet -->
                     <span sec:authorize="hasRole('ADMIN')">
                         <a th:href="@{/projets/edit/{id}(id=${projet.id})}"

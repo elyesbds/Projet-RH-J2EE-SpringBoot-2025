@@ -7,41 +7,66 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body class="home-page">
+
 <!-- Sidebar -->
 <div th:insert="fragments/sidebar :: sidebar"></div>
 
 <!-- Main content -->
 <div class="content">
     <div class="form-container">
+
         <h1 th:text="${fichePaie.id != null ? '✏️ Modifier une fiche de paie' : '➕ Ajouter une fiche de paie'}"></h1>
 
-        <form id="fichePaieForm" th:action="@{/fiches-paie/save}" th:object="${fichePaie}" method="post" novalidate>
+        <form id="fichePaieForm"
+              th:action="@{/fiches-paie/save}"
+              th:object="${fichePaie}"
+              method="post"
+              novalidate>
+
             <input type="hidden" th:field="*{id}">
 
+            <!-- ❗ Erreurs globales -->
             <div th:if="${#fields.hasErrors('global')}" class="alert alert-error">
                 <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
             </div>
 
+            <!-- ======================= EMPLOYÉ ======================= -->
             <div class="form-group">
                 <label for="idEmployer">Employé <span class="required">*</span></label>
-                <select id="idEmployer" name="idEmployer" th:field="*{idEmployer}"
-                        th:classappend="${#fields.hasErrors('idEmployer')} ? 'error'" required>
+
+                <select id="idEmployer"
+                        th:field="*{idEmployer}"
+                        th:classappend="${#fields.hasErrors('idEmployer')} ? 'error'"
+                        required>
+
                     <option value="">-- Sélectionner un employé --</option>
+
                     <option th:each="emp : ${employees}"
                             th:value="${emp.id}"
                             th:text="${emp.prenom + ' ' + emp.nom + ' - ' + emp.matricule}">
                     </option>
                 </select>
-                <span class="error-message" th:if="${#fields.hasErrors('idEmployer')}"
-                      th:errors="*{idEmployer}"></span>
+
+                <span class="error-message"
+                      th:if="${#fields.hasErrors('idEmployer')}"
+                      th:errors="*{idEmployer}">
+                </span>
             </div>
 
+            <!-- ======================= MOIS + ANNÉE ======================= -->
             <div class="form-row">
+
+                <!-- MOIS -->
                 <div class="form-group">
                     <label for="mois">Mois <span class="required">*</span></label>
-                    <select id="mois" name="mois" th:field="*{mois}"
-                            th:classappend="${#fields.hasErrors('mois')} ? 'error'" required>
+
+                    <select id="mois"
+                            th:field="*{mois}"
+                            th:classappend="${#fields.hasErrors('mois')} ? 'error'"
+                            required>
+
                         <option value="">-- Sélectionner un mois --</option>
+
                         <option value="1">Janvier</option>
                         <option value="2">Février</option>
                         <option value="3">Mars</option>
@@ -55,106 +80,155 @@
                         <option value="11">Novembre</option>
                         <option value="12">Décembre</option>
                     </select>
-                    <span class="error-message" th:if="${#fields.hasErrors('mois')}"
-                          th:errors="*{mois}"></span>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('mois')}"
+                          th:errors="*{mois}">
+                    </span>
                 </div>
 
+                <!-- ANNÉE -->
                 <div class="form-group">
                     <label for="annee">Année <span class="required">*</span></label>
-                    <input type="number" id="annee" name="annee" th:field="*{annee}"
+
+                    <input type="number"
+                           id="annee"
+                           th:field="*{annee}"
                            th:classappend="${#fields.hasErrors('annee')} ? 'error'"
-                           required
                            min="2020"
                            th:max="${#dates.year(#dates.createNow())}"
+                           required
                            placeholder="Ex: 2025">
-                    <span class="error-message" th:if="${#fields.hasErrors('annee')}"
-                          th:errors="*{annee}"></span>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('annee')}"
+                          th:errors="*{annee}">
+                    </span>
+
                     <small class="field-hint">Impossible de créer une fiche pour un mois futur</small>
                 </div>
+
             </div>
 
+            <!-- ======================= SALAIRE + PRIMES ======================= -->
             <div class="form-row">
+
+                <!-- Salaire base -->
                 <div class="form-group">
                     <label for="salaireBase">Salaire de base (€) <span class="required">*</span></label>
-                    <input type="number" id="salaireBase" name="salaireBase" th:field="*{salaireBase}"
+
+                    <input type="number"
+                           id="salaireBase"
+                           th:field="*{salaireBase}"
                            th:classappend="${#fields.hasErrors('salaireBase')} ? 'error'"
-                           required
                            step="0.01"
                            min="1000"
                            max="1000000"
+                           required
                            placeholder="Ex: 2500.00">
-                    <span class="error-message" th:if="${#fields.hasErrors('salaireBase')}"
-                          th:errors="*{salaireBase}"></span>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('salaireBase')}"
+                          th:errors="*{salaireBase}">
+                    </span>
+
                     <small class="field-hint">Minimum: 1000€</small>
                 </div>
 
+                <!-- Primes -->
                 <div class="form-group">
                     <label for="primes">Primes (€)</label>
-                    <input type="number" id="primes" name="primes" th:field="*{primes}"
+
+                    <input type="number"
+                           id="primes"
+                           th:field="*{primes}"
                            th:classappend="${#fields.hasErrors('primes')} ? 'error'"
                            step="0.01"
                            min="0"
                            max="100000"
                            placeholder="Ex: 150.00">
-                    <span class="error-message" th:if="${#fields.hasErrors('primes')}"
-                          th:errors="*{primes}"></span>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('primes')}"
+                          th:errors="*{primes}">
+                    </span>
+
                     <small class="field-hint">Optionnel, doit être positif</small>
                 </div>
+
             </div>
 
+            <!-- ======================= DEDUCTIONS + DATE GEN ======================= -->
             <div class="form-row">
+
+                <!-- Déductions -->
                 <div class="form-group">
                     <label for="deductions">Déductions (€)</label>
-                    <input type="number" id="deductions" name="deductions" th:field="*{deductions}"
+
+                    <input type="number"
+                           id="deductions"
+                           th:field="*{deductions}"
                            th:classappend="${#fields.hasErrors('deductions')} ? 'error'"
                            step="0.01"
                            min="0"
                            max="100000"
                            placeholder="Ex: 50.00">
-                    <span class="error-message" th:if="${#fields.hasErrors('deductions')}"
-                          th:errors="*{deductions}"></span>
-                    <small class="field-hint">Ne peut pas dépasser le salaire + primes</small>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('deductions')}"
+                          th:errors="*{deductions}">
+                    </span>
+
+                    <small class="field-hint">Ne peut pas dépasser salaire + primes</small>
                 </div>
 
+                <!-- Date génération -->
                 <div class="form-group">
                     <label for="dateGeneration">Date de génération <span class="required">*</span></label>
-                    <input type="date" id="dateGeneration" name="dateGeneration" th:field="*{dateGeneration}"
+
+                    <input type="date"
+                           id="dateGeneration"
+                           th:field="*{dateGeneration}"
                            th:classappend="${#fields.hasErrors('dateGeneration')} ? 'error'"
-                           required
                            min="2020-01-01"
-                           th:max="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
-                    <span class="error-message" th:if="${#fields.hasErrors('dateGeneration')}"
-                          th:errors="*{dateGeneration}"></span>
+                           th:max="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"
+                           required>
+
+                    <span class="error-message"
+                          th:if="${#fields.hasErrors('dateGeneration')}"
+                          th:errors="*{dateGeneration}">
+                    </span>
+
                     <small class="field-hint">Ne peut pas être dans le futur</small>
                 </div>
+
             </div>
 
+            <!-- ======================= INFO ======================= -->
             <div class="alert alert-info">
-                <strong>ℹ️ Information :</strong> Le net à payer sera calculé automatiquement :
+                <strong>ℹ️ Le net à payer est calculé automatiquement :</strong><br>
                 <em>Salaire de base + Primes - Déductions</em>
-                <br><br>
-                <strong>💡 Règles de validation :</strong>
+
+                <br><br><strong>💡 Validation :</strong>
                 <ul>
-                    <li>L'employé doit être sélectionné</li>
-                    <li>Le mois et l'année sont obligatoires</li>
-                    <li>Impossible de créer une fiche pour un mois futur</li>
-                    <li>L'année doit être entre 2020 et l'année courante</li>
-                    <li>Le salaire de base doit être entre 1000€ et 1 000 000€</li>
-                    <li>Les primes doivent être positives (max 100 000€)</li>
-                    <li>Les déductions doivent être positives et ne peuvent pas dépasser le salaire total</li>
-                    <li>La date de génération ne peut pas être dans le futur ni avant le mois de la fiche</li>
-                    <li>La date de génération ne doit pas être trop ancienne (moins de 5 ans)</li>
+                    <li>Mois + année obligatoires</li>
+                    <li>Impossible futur</li>
+                    <li>Salaire min 1000€</li>
+                    <li>Primes et déductions positives</li>
                 </ul>
             </div>
 
+            <!-- ======================= BOUTONS ======================= -->
             <div class="btn-container">
                 <a th:href="@{/fiches-paie}" class="btn btn-secondary">❌ Annuler</a>
                 <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
             </div>
+
         </form>
     </div>
 </div>
 
 <script th:src="@{/js/form-validation.js}"></script>
+
 </body>
 </html>
