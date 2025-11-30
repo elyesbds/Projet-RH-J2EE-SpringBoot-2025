@@ -32,7 +32,7 @@
    - Clic droit sur le projet → Maven → Update Project → OK
 4. Mettre à jour les mots de passe de connexion
    - Clic droit sur la classe → `Projet-RH-J2EE-SpringBoot-2025-main\src\main\java\com\example\CY_RH_Springboot\PasswordEncoderUtility.java` → Run As → Java Application
-     Cette classe génère automatiquement les mots de passe encodés, et fournit donc deux requêtes SQL.
+   -  Cette classe génère automatiquement les mots de passe encodés, et fournit donc deux requêtes SQL. Copiez ces deux requêtes.
    - Dans MySQL Workbench, compiler `USE cy_rh;` `SET SQL_SAFE_UPDATES = 0;` ainsi que les deux requêts généré précédemment.
 5. Compiler l'application
    - Clic droit sur le projet → Run As → Maven install
