@@ -8,13 +8,17 @@ import com.example.CY_RH_Springboot.repositories.AffectationProjetRepository;
 import com.example.CY_RH_Springboot.models.Departement;
 import com.example.CY_RH_Springboot.models.Employee;
 import com.example.CY_RH_Springboot.models.Projet;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -38,10 +42,20 @@ public class HomeController {
         this.affectationRepository = affectationRepository;
     }
 
+    // Méthodes helper pour vérifier les rôles
+    private boolean isAdmin(Authentication auth) {
+        if (auth == null) return false;
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private boolean isChefDept(Authentication auth) {
+        if (auth == null) return false;
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CHEF_DEPT"));
+    }
+
     // Page d'accueil vierge
     @GetMapping("/home")
     public String home(Model model) {
-        // Initialiser les variables à false pour éviter les erreurs null
         model.addAttribute("showEmployees", false);
         model.addAttribute("showDashboard", false);
         model.addAttribute("showStatistics", false);
@@ -59,7 +73,7 @@ public class HomeController {
         return "home";
     }
 
-    // Route pour afficher le dashboard (exemple)
+    // Route pour afficher le dashboard
     @GetMapping("/home/dashboard")
     public String showDashboard(Model model) {
         model.addAttribute("showDashboard", true);
@@ -75,10 +89,31 @@ public class HomeController {
         return "home";
     }
 
-    // Route pour afficher les projets dans la zone de contenu
+    // Route pour afficher les projets (AVEC FILTRE PAR EMPLOYÉ)
     @GetMapping("/home/projets")
-    public String showProjets(Model model) {
-        model.addAttribute("projets", projetRepository.findAll());
+    public String showProjets(Model model, Authentication auth) {
+        List<Projet> projets;
+
+        if (auth != null && auth.isAuthenticated()) {
+            String email = auth.getName();
+            Optional<Employee> currentEmployee = employeeRepository.findByEmail(email);
+
+            if (currentEmployee.isPresent()) {
+                // Si ADMIN ou CHEF_DEPT : voir tous les projets
+                if (isAdmin(auth) || isChefDept(auth)) {
+                    projets = projetRepository.findAll();
+                } else {
+                    // Sinon : voir uniquement les projets auxquels l'employé est affecté
+                    projets = projetRepository.findProjetsByEmployeeId(currentEmployee.get().getId());
+                }
+            } else {
+                projets = new ArrayList<>();
+            }
+        } else {
+            projets = new ArrayList<>();
+        }
+
+        model.addAttribute("projets", projets);
         model.addAttribute("employees", employeeRepository.findAll());
         model.addAttribute("departements", departementRepository.findAll());
         model.addAttribute("showProjets", true);
@@ -87,15 +122,12 @@ public class HomeController {
 
     // Route pour afficher les fiches de paie dans la zone de contenu
     @GetMapping("/home/fiches-paie")
-    public String showFichesPaie(Model model, org.springframework.security.core.Authentication auth) {
+    public String showFichesPaie(Model model, Authentication auth) {
         List<com.example.CY_RH_Springboot.models.FicheDePaie> fichesPaie;
         List<Employee> employees = employeeRepository.findAll();
 
-        // Vérifier si l'utilisateur est admin
-        boolean isAdmin = auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
-
-        // Vérifier si l'utilisateur est chef de département
-        boolean isChefDept = auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CHEF_DEPT"));
+        boolean isAdmin = isAdmin(auth);
+        boolean isChefDept = isChefDept(auth);
 
         if (isAdmin) {
             // Admin voit toutes les fiches
@@ -103,7 +135,7 @@ public class HomeController {
         } else if (isChefDept) {
             // Chef de département voit les fiches de son département
             String email = auth.getName();
-            java.util.Optional<Employee> currentUser = employeeRepository.findByEmail(email);
+            Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
             if (currentUser.isPresent() && currentUser.get().getIdDepartement() != null) {
                 Integer deptId = currentUser.get().getIdDepartement();
@@ -121,7 +153,7 @@ public class HomeController {
         } else {
             // Employé normal ne voit que ses propres fiches
             String email = auth.getName();
-            java.util.Optional<Employee> currentUser = employeeRepository.findByEmail(email);
+            Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
             if (currentUser.isPresent()) {
                 fichesPaie = ficheDePaieRepository.findByIdEmployer(currentUser.get().getId().intValue());
@@ -139,8 +171,6 @@ public class HomeController {
     // Route pour afficher les statistiques
     @GetMapping("/home/statistics")
     public String showStatistics(Model model) {
-        // Calculer les statistiques
-
         // 1. Nombre total d'employés et projets
         long totalEmployees = employeeRepository.count();
         long totalProjets = projetRepository.count();

@@ -7,7 +7,16 @@ import com.example.CY_RH_Springboot.repositories.ProjetRepository;
 import com.example.CY_RH_Springboot.repositories.EmployeeRepository;
 import com.example.CY_RH_Springboot.repositories.DepartementRepository;
 
+import com.lowagie.text.*;
+import com.lowagie.text.Font;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
@@ -16,6 +25,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +51,17 @@ public class ProjetController {
         this.departementRepository = departementRepository;
     }
 
-    // Permissions : inchangées
+    // Méthodes helper pour les permissions
+    private boolean isAdmin(Authentication auth) {
+        if (auth == null) return false;
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private boolean isChefDept(Authentication auth) {
+        if (auth == null) return false;
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CHEF_DEPT"));
+    }
+
     private boolean canManageProjects(Authentication auth) {
         if (auth == null) return false;
         if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) return true;
@@ -59,17 +83,18 @@ public class ProjetController {
         return false;
     }
 
-    // === LISTE ===
+    // === LISTE (AVEC FILTRE PAR EMPLOYÉ) ===
     @GetMapping
     public String listProjets(Model model, Authentication auth) {
         List<Projet> projets;
         List<Employee> employees = employeeRepository.findAll();
         List<Departement> departements = departementRepository.findAll();
 
-        if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ||
-                auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CHEF_DEPT"))) {
+        // ADMIN et CHEF_DEPT voient tous les projets
+        if (isAdmin(auth) || isChefDept(auth)) {
             projets = projetRepository.findAll();
         } else {
+            // Les autres employés voient uniquement leurs projets
             String email = auth.getName();
             Optional<Employee> currentUser = employeeRepository.findByEmail(email);
 
@@ -113,7 +138,7 @@ public class ProjetController {
             RedirectAttributes redirectAttributes
     ) {
 
-        // ✦ Vérification autorisations
+        // Vérification autorisations
         if (projet.getId() != null) {
             Optional<Projet> existing = projetRepository.findById(projet.getId());
             if (existing.isPresent() && !canManageSpecificProject(auth, existing.get())) {
@@ -127,51 +152,51 @@ public class ProjetController {
             }
         }
 
-        // ✦ VALIDATIONS MÉTIER
+        // VALIDATIONS MÉTIER
 
-        // → Date fin prévue >= date début
+        // Date fin prévue >= date début
         if (projet.getDateFinPrevue() != null &&
                 projet.getDateFinPrevue().isBefore(projet.getDateDebut())) {
             bindingResult.rejectValue("dateFinPrevue", "error.projet",
                     "La date de fin prévue doit être après la date de début");
         }
 
-        // → Date fin réelle >= date début
+        // Date fin réelle >= date début
         if (projet.getDateFinReelle() != null &&
                 projet.getDateFinReelle().isBefore(projet.getDateDebut())) {
             bindingResult.rejectValue("dateFinReelle", "error.projet",
                     "La date de fin réelle doit être après la date de début");
         }
 
-        // → Si projet TERMINE alors date fin réelle obligatoire
+        // Si projet TERMINE alors date fin réelle obligatoire
         if (projet.getEtatProjet().equals("TERMINE") && projet.getDateFinReelle() == null) {
             bindingResult.rejectValue("dateFinReelle", "error.projet",
                     "Vous devez renseigner la date de fin réelle pour un projet terminé");
         }
 
-        // → Chef de projet doit exister (si renseigné)
+        // Chef de projet doit exister (si renseigné)
         if (projet.getChefProjet() != null &&
                 !employeeRepository.existsById(projet.getChefProjet().longValue())) {
             bindingResult.rejectValue("chefProjet", "error.projet", "Employé introuvable");
         }
 
-        // → Département doit exister (si renseigné)
+        // Département doit exister (si renseigné)
         if (projet.getIdDepartement() != null &&
                 !departementRepository.existsById((int) projet.getIdDepartement().longValue())) {
             bindingResult.rejectValue("idDepartement", "error.projet", "Département introuvable");
         }
 
-        // ✦ Si erreurs → on renvoie au formulaire
+        // Si erreurs → on renvoie au formulaire
         if (bindingResult.hasErrors()) {
             model.addAttribute("employees", employeeRepository.findAll());
             model.addAttribute("departements", departementRepository.findAll());
             return "projets/projet_form";
         }
 
-        // ✦ Sauvegarde
+        // Sauvegarde
         projetRepository.save(projet);
 
-        // === Mise à jour du rôle chef de projet ===
+        // Mise à jour du rôle chef de projet
         employeeRepository.findAll().forEach(emp -> {
             if (emp.getRole().equals("CHEF_PROJET") &&
                     (projet.getChefProjet() == null ||
@@ -235,5 +260,57 @@ public class ProjetController {
 
         redirectAttributes.addFlashAttribute("successMessage", "Projet supprimé avec succès");
         return "redirect:/projets";
+    }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportProjetsToPDF() throws IOException {
+        List<Projet> projets = projetRepository.findAll();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4.rotate());
+        try {
+            PdfWriter.getInstance(document, bos);
+            document.open();
+            Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontTitre.setSize(20);
+            Paragraph pTitre = new Paragraph("Rapport: Liste des Projets en cours au " + LocalDate.now(), fontTitre);
+            pTitre.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(pTitre);
+            document.add(new Paragraph(" "));
+            PdfPTable table = new PdfPTable(5);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[] {1f, 4f, 2f, 2f, 2f});
+            table.setSpacingBefore(10);
+            Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+            fontHeader.setSize(12);
+            String[] tableHeaders = {"ID", "Nom du Projet", "Date Début", "Date Fin Prévue", "Statut"};
+            for (String header : tableHeaders) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, fontHeader));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(new Color(255, 223, 186));
+                cell.setPadding(5);
+                table.addCell(cell);
+            }
+            Font fontData = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            for (Projet projet : projets) {
+                table.addCell(new Phrase(projet.getId().toString(), fontData));
+                table.addCell(new Phrase(projet.getNomProjet(), fontData));
+                table.addCell(new Phrase(projet.getDateDebut().format(dateFormatter), fontData));
+                table.addCell(new Phrase(projet.getDateFinPrevue().format(dateFormatter), fontData));
+                table.addCell(new Phrase(projet.getEtatProjet(), fontData));
+            }
+            document.add(table);
+            document.close();
+        } catch (DocumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        byte[] pdfBytes = bos.toByteArray();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String filename = "rapport_projets_" + LocalDate.now() + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
 }

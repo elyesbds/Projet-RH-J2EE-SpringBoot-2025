@@ -62,7 +62,8 @@
                 <div class="form-group">
                     <label for="dateFinPrevue">Date de fin prévue</label>
                     <input type="date" id="dateFinPrevue" name="dateFinPrevue" th:field="*{dateFinPrevue}"
-                           th:classappend="${#fields.hasErrors('dateFinPrevue')} ? 'error'">
+                           th:classappend="${#fields.hasErrors('dateFinPrevue')} ? 'error'"
+                           required>
                     <span class="error-message" th:if="${#fields.hasErrors('dateFinPrevue')}"
                           th:errors="*{dateFinPrevue}"></span>
                     <small class="field-hint">Doit être après la date de début</small>

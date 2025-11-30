@@ -7,7 +7,15 @@ import com.example.CY_RH_Springboot.repositories.DepartementRepository;
 import com.example.CY_RH_Springboot.repositories.FicheDePaieRepository;
 import com.example.CY_RH_Springboot.services.PasswordEncoderService;
 
+import com.lowagie.text.*;
+import com.lowagie.text.Font;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
@@ -20,6 +28,10 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.springframework.validation.BindingResult;
 
+import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -195,20 +207,17 @@ public class EmployeeController {
 
         Employee employee = employeeOpt.get();
 
-        // 🔥 Vérifier si cet employé était chef d'un département
         List<Departement> departements = departementRepository.findAll();
 
         departements.stream()
                 .filter(d -> d.getChefDepartement() != null && d.getChefDepartement().longValue() == id)
                 .forEach(d -> {
-                    d.setChefDepartement(null);   // Retirer l'employé en tant que chef
+                    d.setChefDepartement(null);
                     departementRepository.save(d);
                 });
 
-        // 🔥 NOUVEAU : Supprimer d'abord toutes les fiches de paie associées
         ficheDePaieRepository.deleteByIdEmployer(id);
 
-        // 🔥 Maintenant on peut supprimer l'employé sans erreur
         employeeRepository.delete(employee);
 
         redirectAttributes.addFlashAttribute("successMessage",
@@ -216,6 +225,51 @@ public class EmployeeController {
                         " (si cet employé était chef de département, le poste a été libéré)");
 
         return "redirect:/employees";
+    }
+
+    @GetMapping("/export/pdf") public ResponseEntity<byte[]> exportEmployeesToPDF() throws IOException {
+        List<Employee> employees = employeeRepository.findAll();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4.rotate());
+        PdfWriter.getInstance(document, bos);
+        document.open();
+        Font fontTitre = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        fontTitre.setSize(20);
+        Paragraph p = new Paragraph("Rapport: Liste des Employés au " + LocalDate.now(), fontTitre);
+        p.setAlignment(Paragraph.ALIGN_CENTER);
+        document.add(p);
+        document.add(new Paragraph(" "));
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[] {2.5f, 2.5f, 4f, 2.5f, 3f, 2f});
+        table.setSpacingBefore(10);
+        Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        String[] tableHeaders = {"Nom", "Prénom", "Email", "Téléphone", "Poste", "Grade"};
+        for (String header : tableHeaders) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, fontHeader));
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setBackgroundColor(new Color(200, 200, 200));
+            table.addCell(cell);
+        }
+        Font fontData = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        for (Employee employee : employees) {
+            table.addCell(new Phrase(employee.getNom(), fontData));
+            table.addCell(new Phrase(employee.getPrenom(), fontData));
+            table.addCell(new Phrase(employee.getEmail(), fontData));
+            table.addCell(new Phrase(employee.getTelephone(), fontData));
+            table.addCell(new Phrase(employee.getPoste(), fontData));
+            table.addCell(new Phrase(employee.getGrade(), fontData));
+        }
+        document.add(table);
+        document.close();
+        byte[] pdfBytes = bos.toByteArray();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String filename = "rapport_employes_" + LocalDate.now() + ".pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+        return ResponseEntity.ok() .headers(headers) .body(pdfBytes);
     }
 
 }

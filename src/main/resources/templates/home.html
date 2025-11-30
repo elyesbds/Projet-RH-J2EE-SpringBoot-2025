@@ -98,23 +98,6 @@
         </div>
     </div>
 
-    <!-- Section: Dashboard -->
-    <div th:if="${showDashboard != null and showDashboard}">
-        <div class="content-header">
-            <h2>📊 Tableau de bord</h2>
-        </div>
-
-        <div class="dashboard-card">
-            <h3>Nombre total d'employés</h3>
-            <div class="stat-number" th:text="${employeeCount}">0</div>
-        </div>
-
-        <div class="dashboard-card">
-            <h3>Statistiques générales</h3>
-            <p>Bienvenue sur votre tableau de bord. Vous pouvez visualiser ici les indicateurs clés de votre entreprise.</p>
-        </div>
-    </div>
-
     <!-- Section: Statistiques -->
     <div th:if="${showStatistics != null and showStatistics}">
         <div class="content-header">
