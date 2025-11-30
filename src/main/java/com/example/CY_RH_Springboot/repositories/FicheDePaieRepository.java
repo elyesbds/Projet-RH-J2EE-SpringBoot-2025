@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface FicheDePaieRepository extends JpaRepository<FicheDePaie, Integer> {
     List<FicheDePaie> findByIdEmployer(Integer idEmployer);
+    void deleteByIdEmployer(Long idEmployer);
 }

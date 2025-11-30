@@ -11,9 +11,6 @@ import java.time.LocalDate;
 @Table(name = "employer")
 public class Employee {
 
-    // --- GROUPES DE VALIDATION ---
-    // OnCreate : validations à appliquer uniquement lors de la création
-    // OnUpdate : validations (si besoin) lors de la modification
     public interface OnCreate {}
     public interface OnUpdate {}
 
@@ -51,12 +48,6 @@ public class Employee {
     @Column(name = "Telephone")
     private String telephone;
 
-    /*
-     * IMPORTANT :
-     * - Le mot de passe doit être obligatoire uniquement à la création.
-     * - On applique la contrainte @Size(min = 6) dans le groupe OnCreate.
-     * - Lors de la modification, on autorise le champ vide et on conserve l'ancien mot de passe côté contrôleur.
-     */
     @Size(min = 6, max = 255, message = "Le mot de passe doit contenir au moins 6 caractères", groups = OnCreate.class)
     @Column(name = "Password")
     private String password;

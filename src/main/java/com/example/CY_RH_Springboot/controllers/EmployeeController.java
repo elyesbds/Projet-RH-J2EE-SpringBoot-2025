@@ -4,8 +4,10 @@ import com.example.CY_RH_Springboot.models.Employee;
 import com.example.CY_RH_Springboot.models.Departement;
 import com.example.CY_RH_Springboot.repositories.EmployeeRepository;
 import com.example.CY_RH_Springboot.repositories.DepartementRepository;
+import com.example.CY_RH_Springboot.repositories.FicheDePaieRepository;
 import com.example.CY_RH_Springboot.services.PasswordEncoderService;
 
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
@@ -28,13 +30,16 @@ public class EmployeeController {
 
     private final EmployeeRepository employeeRepository;
     private final DepartementRepository departementRepository;
-    private final PasswordEncoderService passwordEncoder; // service proposé (bean)
+    private final FicheDePaieRepository ficheDePaieRepository;
+    private final PasswordEncoderService passwordEncoder;
 
     public EmployeeController(EmployeeRepository employeeRepository,
                               DepartementRepository departmentRepository,
-                              PasswordEncoderService passwordEncoder) {
+                              PasswordEncoderService passwordEncoder,
+                              FicheDePaieRepository ficheDePaieRepository) {
         this.employeeRepository = employeeRepository;
         this.departementRepository = departmentRepository;
+        this.ficheDePaieRepository = ficheDePaieRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -170,6 +175,7 @@ public class EmployeeController {
 
     // Supprimer un employé
     @GetMapping("/delete/{id}")
+    @Transactional
     public String deleteEmployee(
             @PathVariable Long id,
             Authentication auth,
@@ -189,7 +195,7 @@ public class EmployeeController {
 
         Employee employee = employeeOpt.get();
 
-        // 🔥 Vérifier si cet employé était chef d’un département
+        // 🔥 Vérifier si cet employé était chef d'un département
         List<Departement> departements = departementRepository.findAll();
 
         departements.stream()
@@ -199,15 +205,17 @@ public class EmployeeController {
                     departementRepository.save(d);
                 });
 
-        // 🔥 Maintenant on peut supprimer l'employé
+        // 🔥 NOUVEAU : Supprimer d'abord toutes les fiches de paie associées
+        ficheDePaieRepository.deleteByIdEmployer(id);
+
+        // 🔥 Maintenant on peut supprimer l'employé sans erreur
         employeeRepository.delete(employee);
 
         redirectAttributes.addFlashAttribute("successMessage",
-                "Employé supprimé avec succès" +
+                "Employé et ses fiches de paie supprimés avec succès" +
                         " (si cet employé était chef de département, le poste a été libéré)");
 
         return "redirect:/employees";
     }
 
-    // Export PDF et autres méthodes inchangées...
 }
