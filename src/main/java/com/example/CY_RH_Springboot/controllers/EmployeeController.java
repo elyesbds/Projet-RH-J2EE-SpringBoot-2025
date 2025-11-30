@@ -27,14 +27,14 @@ import java.util.Set;
 public class EmployeeController {
 
     private final EmployeeRepository employeeRepository;
-    private final DepartementRepository departmentRepository;
+    private final DepartementRepository departementRepository;
     private final PasswordEncoderService passwordEncoder; // service proposé (bean)
 
     public EmployeeController(EmployeeRepository employeeRepository,
                               DepartementRepository departmentRepository,
                               PasswordEncoderService passwordEncoder) {
         this.employeeRepository = employeeRepository;
-        this.departmentRepository = departmentRepository;
+        this.departementRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -61,7 +61,7 @@ public class EmployeeController {
         }
 
         model.addAttribute("employee", new Employee());
-        model.addAttribute("departements", departmentRepository.findAll());
+        model.addAttribute("departements", departementRepository.findAll());
         return "employees/employee_form";
     }
 
@@ -76,7 +76,7 @@ public class EmployeeController {
         Optional<Employee> employee = employeeRepository.findById(id);
         if (employee.isPresent()) {
             model.addAttribute("employee", employee.get());
-            model.addAttribute("departements", departmentRepository.findAll());
+            model.addAttribute("departements", departementRepository.findAll());
             return "employees/employee_form";
         }
         redirectAttributes.addFlashAttribute("errorMessage", "Employé introuvable");
@@ -120,7 +120,7 @@ public class EmployeeController {
 
         // Si erreurs → renvoyer le formulaire AVEC la liste des départements
         if (result.hasErrors()) {
-            model.addAttribute("departements", departmentRepository.findAll());
+            model.addAttribute("departements", departementRepository.findAll());
             model.addAttribute("employee", employee);
             return "employees/employee_form";
         }
@@ -156,7 +156,7 @@ public class EmployeeController {
 
         // Optionnel : vérifier la cohérence idDepartement -> exiger qu'il existe si non null
         if (employee.getIdDepartement() != null) {
-            boolean exists = departmentRepository.findById(employee.getIdDepartement()).isPresent();
+            boolean exists = departementRepository.findById(employee.getIdDepartement()).isPresent();
             if (!exists) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Le département sélectionné est invalide");
                 return "redirect:/employees/add";
@@ -170,15 +170,42 @@ public class EmployeeController {
 
     // Supprimer un employé
     @GetMapping("/delete/{id}")
-    public String deleteEmployee(@PathVariable Long id, Authentication auth, RedirectAttributes redirectAttributes) {
+    public String deleteEmployee(
+            @PathVariable Long id,
+            Authentication auth,
+            RedirectAttributes redirectAttributes
+    ) {
         if (!isAdmin(auth)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Seul un administrateur peut supprimer un employé");
             return "redirect:/employees";
         }
 
-        Optional<Employee> employee = employeeRepository.findById(id);
-        employee.ifPresent(employeeRepository::delete);
-        redirectAttributes.addFlashAttribute("successMessage", "Employé supprimé avec succès");
+        Optional<Employee> employeeOpt = employeeRepository.findById(id);
+
+        if (employeeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Employé introuvable");
+            return "redirect:/employees";
+        }
+
+        Employee employee = employeeOpt.get();
+
+        // 🔥 Vérifier si cet employé était chef d’un département
+        List<Departement> departements = departementRepository.findAll();
+
+        departements.stream()
+                .filter(d -> d.getChefDepartement() != null && d.getChefDepartement().longValue() == id)
+                .forEach(d -> {
+                    d.setChefDepartement(null);   // Retirer l'employé en tant que chef
+                    departementRepository.save(d);
+                });
+
+        // 🔥 Maintenant on peut supprimer l'employé
+        employeeRepository.delete(employee);
+
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Employé supprimé avec succès" +
+                        " (si cet employé était chef de département, le poste a été libéré)");
+
         return "redirect:/employees";
     }
 

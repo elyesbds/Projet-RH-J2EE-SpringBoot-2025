@@ -157,8 +157,7 @@
         <div class="form-group">
             <label for="role">Rôle <span class="required">*</span></label>
             <select id="role" name="role" th:field="*{role}"
-                    th:classappend="${#fields.hasErrors('role')} ? 'error'"
-                    required>
+                    th:classappend="${#fields.hasErrors('role')} ? 'error'">
                 <option value="">-- Sélectionner un rôle --</option>
                 <option value="EMPLOYE">Employé</option>
                 <option value="CHEF_PROJET">Chef de projet</option>

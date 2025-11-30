@@ -85,7 +85,6 @@ public class Employee {
     @Column(name = "Id_departement")
     private Integer idDepartement;
 
-    @NotBlank(message = "Le rôle est obligatoire", groups = {OnCreate.class, OnUpdate.class})
     @Column(name = "Role")
     private String role;
 
