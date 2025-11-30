@@ -20,3 +20,33 @@
    - File → Open SQL Script → Sélectionner `cy_rh_bdd.sql`
    - Cliquer sur l'éclair pour exécuter
 4. La base `CY_RH` est créée avec les données de test
+
+---
+
+## Étape 2 : Application
+
+1. Télécharger le dossier `Projet-RH-J2EE-SpringBoot-2025`
+2. Importer dans Eclipse
+   - File → Open Projects from File System
+   - Directory → Sélectionner le dossier `Projet-RH-J2EE-SpringBoot-2025`
+   - Finish
+3. Mettre à jour Maven
+   - Clic droit sur le projet → Maven → Update Project → OK
+4. Lancer l'application
+   - Clic droit sur le projet → Run As → Java Application
+   - Sélectionner CyRhSpringbootApplication → Finish
+
+---
+
+## Étape 3 : Connexion
+
+**Compte Administrateur :**
+- Email : `admin@cy-rh.local`
+- Mot de passe : `admin123`
+
+**Comptes Employés :**
+- Email : `[prenom].[nom]@cy-rh.local` (ex: `maria.lopez@cy-rh.local`)
+- Mot de passe : `password`
+
+---
+
