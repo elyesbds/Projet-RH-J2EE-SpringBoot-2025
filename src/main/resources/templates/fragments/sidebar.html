@@ -15,16 +15,6 @@
             </a>
         </li>
         <li sec:authorize="isAuthenticated()">
-            <a th:href="@{/home/dashboard}">
-                <span class="sidebar-icon">📊</span> Tableau de bord
-            </a>
-        </li>
-        <li sec:authorize="!isAuthenticated()">
-            <a class="disabled">
-                <span class="sidebar-icon">📊</span> Tableau de bord
-            </a>
-        </li>
-        <li sec:authorize="isAuthenticated()">
             <a th:href="@{/home/employees}">
                 <span class="sidebar-icon">👥</span> Employés
             </a>

@@ -28,7 +28,7 @@
     </div>
 
     <!-- Message de bienvenue par défaut (affiché uniquement si aucune section n'est active) -->
-    <div th:if="${showEmployees == null or (!showEmployees and !showDashboard and !showStatistics and !showDepartements and !showProjets and !showFichesPaie)}" class="welcome-message">
+    <div th:if="${(showEmployees ?: false) == false and (showStatistics ?: false) == false and (showDepartements ?: false) == false and (showProjets ?: false) == false and (showFichesPaie ?: false) == false}" class="welcome-message">
         <h1>🏢 Bienvenue dans le système de gestion RH</h1>
         <p>Sélectionnez une option dans le menu de gauche pour commencer</p>
     </div>
@@ -86,7 +86,15 @@
                     <td th:text="${employee.grade}"></td>
                     <td th:text="${employee.salaireBase}"></td>
                     <td th:text="${employee.dateEmbauche}"></td>
-                    <td th:text="${employee.idDepartement}"></td>
+                    <td>
+                        <span th:if="${employee.idDepartement != null}">
+                            <span th:each="dept : ${departements}">
+                                <span th:if="${dept.id == employee.idDepartement}"
+                                      th:text="${dept.intitule}"></span>
+                            </span>
+                        </span>
+                        <span th:if="${employee.idDepartement == null}">-</span>
+                    </td>
                     <td th:text="${employee.role}"></td>
                 </tr>
                 </tbody>
@@ -283,7 +291,15 @@
                 <tr th:each="departement : ${departements}">
                     <td th:text="${departement.id}"></td>
                     <td th:text="${departement.intitule}"></td>
-                    <td th:text="${departement.chefDepartement}"></td>
+                    <td>
+                        <span th:if="${departement.chefDepartement != null}">
+                            <span th:each="emp : ${employees}">
+                                <span th:if="${emp.id == departement.chefDepartement}"
+                                      th:text="${emp.prenom + ' ' + emp.nom}"></span>
+                            </span>
+                        </span>
+                        <span th:if="${departement.chefDepartement == null}">-</span>
+                    </td>
                 </tr>
                 </tbody>
             </table>

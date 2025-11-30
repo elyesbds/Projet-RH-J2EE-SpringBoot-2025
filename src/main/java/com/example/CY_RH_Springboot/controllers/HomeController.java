@@ -69,6 +69,7 @@ public class HomeController {
     @GetMapping("/home/employees")
     public String showEmployees(Model model) {
         model.addAttribute("employees", employeeRepository.findAll());
+        model.addAttribute("departements", departementRepository.findAll());
         model.addAttribute("showEmployees", true);
         return "home";
     }
@@ -85,6 +86,7 @@ public class HomeController {
     @GetMapping("/home/departements")
     public String showDepartements(Model model) {
         model.addAttribute("departements", departementRepository.findAll());
+        model.addAttribute("employees", employeeRepository.findAll());
         model.addAttribute("showDepartements", true);
         return "home";
     }
