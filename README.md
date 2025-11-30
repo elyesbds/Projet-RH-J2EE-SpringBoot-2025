@@ -32,7 +32,11 @@
    - Finish
 3. Mettre à jour Maven
    - Clic droit sur le projet → Maven → Update Project → OK
-4. Lancer l'application
+4. Mettre à jour la base de donnée
+   - Clic droit sur le projet → Run As → Java Application
+   - Sélectionner PasswordEncoderUtility → Finish
+   - Executer les commandes affichés dans MySQL
+5. Lancer l'application
    - Clic droit sur le projet → Run As → Java Application
    - Sélectionner CyRhSpringbootApplication → Finish
 
