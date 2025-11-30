@@ -18,11 +18,6 @@
         </li>
         <li>
             <a class="disabled">
-                <span class="sidebar-icon">📊</span> Tableau de bord
-            </a>
-        </li>
-        <li>
-            <a class="disabled">
                 <span class="sidebar-icon">👥</span> Employés
             </a>
         </li>
@@ -81,9 +76,10 @@
 
                 <div class="form-group">
                     <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password"
-                           required placeholder="••••••••"
-                           autocomplete="current-password">
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" id="togglePassword" class="password-toggle-btn">👁️</button>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-full">
@@ -98,5 +94,6 @@
         </div>
     </div>
 </div>
+<script th:src="@{/js/password-toggle.js}"></script>
 </body>
 </html>
