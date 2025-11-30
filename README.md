@@ -35,7 +35,7 @@
 4. Mettre à jour la base de donnée
    - Clic droit sur le projet → Run As → Java Application
    - Sélectionner PasswordEncoderUtility → Finish
-   - Executer les commandes affichés dans MySQL
+   - Executer la commande "USE cy_rh" suivit des commandes affichés dans le terminal dans la base de donnée MySQL
 5. Lancer l'application
    - Clic droit sur le projet → Run As → Java Application
    - Sélectionner CyRhSpringbootApplication → Finish
